@@ -19,12 +19,14 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useErrorStore } from './stores/errorStore';
 
 // --- Types ---
 
 export type AppMode = 'builder' | 'ide';
 export type AgentRole = 'orchestrator' | 'architect' | 'executor' | 'reasoner' | 'worker' | 'scout';
 export type AgentStatus = 'idle' | 'thinking' | 'running' | 'done' | 'error';
+export type EconomyMode = 'economy' | 'balanced' | 'max-power';
 
 export interface LogEntry {
   timestamp: number;
@@ -57,7 +59,25 @@ export interface ChatMessage {
   role: MessageRole;
   content: string;
   agentId?: string;
+  agentName?: string;
+  agentRole?: string;
   timestamp: number;
+  type?: 'text' | 'insight' | 'comparison' | 'terminal' | 'error-card' | 'error-fix' | 'error-prevention';
+  terminal?: {
+    command: string;
+    output: string[];
+    exitCode?: number;
+    isStreaming?: boolean;
+  };
+  comparisonData?: {
+    models: {
+      name: string;
+      dotColor: string;
+      content: string;
+      metrics: { time: string; tokens: string; cost: string };
+    }[];
+  };
+  metadata?: any;
 }
 
 export type FileType = 'file' | 'folder';
@@ -72,6 +92,19 @@ export interface FileNode {
 }
 
 export type BuildStatus = 'idle' | 'building' | 'success' | 'error';
+export type DeployStatus = 'idle' | 'building' | 'success' | 'error';
+
+export interface DeployEntry {
+  id: string;
+  status: 'success' | 'error' | 'building';
+  target: 'Vercel' | 'Netlify' | 'Coolify' | 'Custom';
+  environment: 'Preview' | 'Staging' | 'Production';
+  duration: string;
+  commit: string;
+  timestamp: string;
+  url: string;
+  logs: string[];
+}
 
 // --- Initial State ---
 
@@ -93,13 +126,7 @@ const INITIAL_MODELS: Record<AgentRole, string> = {
   scout: 'kimi-k2'
 };
 
-const INITIAL_FILES: FileNode[] = [
-  { id: 'root', name: 'src', type: 'folder', parentId: null },
-  { id: 'f1', name: 'App.tsx', type: 'file', parentId: 'root', extension: 'tsx', content: '// App.tsx content' },
-  { id: 'f2', name: 'index.css', type: 'file', parentId: 'root', extension: 'css', content: '/* styles */' },
-  { id: 'f3', name: 'utils.ts', type: 'file', parentId: 'root', extension: 'ts', content: '// utils' },
-  { id: 'f4', name: 'package.json', type: 'file', parentId: null, extension: 'json', content: '{ "name": "app" }' },
-];
+const INITIAL_FILES: FileNode[] = [];
 
 const INITIAL_CHAT_MESSAGES: ChatMessage[] = [
   {
@@ -153,6 +180,7 @@ interface AppState {
   createFile: (name: string, type: FileType, parentId: string | null) => void;
   deleteFile: (id: string) => void;
   renameFile: (id: string, newName: string) => void;
+  duplicateFile: (id: string) => void;
 
   // 5. BUILD STATE
   buildStatus: BuildStatus;
@@ -160,20 +188,72 @@ interface AppState {
   filesGenerated: number;
   totalTokens: number;
   previewUrl: string;
+  isPreviewOpen: boolean;
   triggerBuild: () => void;
   setBuildSuccess: (time: number, filesCount: number) => void;
   setBuildError: () => void;
+  togglePreview: (force?: boolean) => void;
+
+  // 7. DEPLOY STATE
+  deployStatus: DeployStatus;
+  deployProgress: number;
+  deployLogs: string[];
+  deployHistory: DeployEntry[];
+  startDeploy: (target: string, env: string, branch: string) => Promise<void>;
+  rollbackDeploy: (id: string) => void;
 
   // 6. SETTINGS
   parallelLimit: number;
   autoRoute: boolean;
+  economyMode: EconomyMode;
+  setEconomyMode: (mode: EconomyMode) => void;
   apiKeys: Record<string, string>;
   setApiKeys: (keys: Record<string, string>) => void;
+
+  // 8. MAX POWER FEATURES
+  consensusState: {
+    active: boolean;
+    models: string[];
+    agreement: number;
+    status: 'running' | 'agreed' | 'disagreed';
+    diff?: { left: string; right: string };
+  } | null;
+  setConsensusState: (state: AppState['consensusState']) => void;
+  taskCount: number;
+  // 9. TERMINAL STATE
+  isTerminalOpen: boolean;
+  setTerminalOpen: (open: boolean) => void;
+  // 10. DATABASE STATE
+  isDatabaseOpen: boolean;
+  setDatabaseOpen: (open: boolean) => void;
+  // 11. CONFIG CARDS
+  activeConfigCard: 'secrets' | 'packages' | 'config' | null;
+  setActiveConfigCard: (card: 'secrets' | 'packages' | 'config' | null) => void;
+  // 12. BILLING MODAL
+  isBillingModalOpen: boolean;
+  setBillingModalOpen: (open: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
+      // 9. TERMINAL STATE
+      isTerminalOpen: false,
+      setTerminalOpen: (open) => set({ isTerminalOpen: open }),
+      taskCount: 0,
+
+      // 10. DATABASE STATE
+      isDatabaseOpen: false,
+      setDatabaseOpen: (open) => set({ isDatabaseOpen: open }),
+
+      // 11. CONFIG CARDS
+      activeConfigCard: null,
+      setActiveConfigCard: (card) => set({ activeConfigCard: card }),
+
+      // 12. BILLING MODAL
+      isBillingModalOpen: false,
+      setBillingModalOpen: (open) => set({ isBillingModalOpen: open }),
+
       // 1. MODE STATE
       mode: 'builder',
       previousMode: null,
@@ -221,15 +301,72 @@ export const useAppStore = create<AppState>()(
       // 3. CHAT STATE
       messages: INITIAL_CHAT_MESSAGES,
       isOrchestratorThinking: false,
-      sendUserMessage: (text, targetAgent) => set((state) => ({
-        messages: [...state.messages, {
-          id: Date.now().toString(),
-          role: 'user',
-          content: text,
-          agentId: targetAgent,
-          timestamp: Date.now()
-        }]
-      })),
+      sendUserMessage: (text, targetAgent) => set((state) => {
+        const isDbCommand = text.toLowerCase().includes('show database') || text.toLowerCase().includes('open database');
+        
+        if (text.toLowerCase().includes('git log') || text.toLowerCase().includes('show commits')) {
+          setTimeout(() => {
+            set((s) => ({
+              messages: [...s.messages, {
+                id: `git-log-${Date.now()}`,
+                role: 'system',
+                agentId: 'executor',
+                content: 'Showing git log',
+                timestamp: Date.now(),
+                type: 'text'
+              }]
+            }));
+          }, 500);
+        }
+
+        if (text.toLowerCase() === 'commit') {
+          get().simulateBuilderFlow('Commit changes');
+        }
+
+        if (text.toLowerCase() === 'push') {
+          get().simulateBuilderFlow('Push to origin');
+        }
+
+        if (text.toLowerCase().includes('connect github')) {
+          setTimeout(() => {
+            set((s) => ({
+              messages: [...s.messages, {
+                id: `github-conn-${Date.now()}`,
+                role: 'system',
+                agentId: 'orchestrator',
+                content: 'Connect to GitHub',
+                timestamp: Date.now(),
+                type: 'text'
+              }]
+            }));
+          }, 500);
+        }
+
+        if (text.toLowerCase().includes('trigger error')) {
+          setTimeout(() => {
+            const { addError } = useErrorStore.getState();
+            addError({
+              type: 'Runtime Error',
+              message: "Cannot read properties of undefined (reading 'user')",
+              file: 'src/components/Auth.tsx',
+              line: 42,
+              stack: "TypeError: Cannot read properties of undefined (reading 'user')\n    at AuthComponent (Auth.tsx:42:15)\n    at renderWithHooks (react-dom.development.js:16305:18)\n    at mountIndeterminateComponent (react-dom.development.js:20074:13)\n    at beginWork (react-dom.development.js:21587:16)"
+            });
+          }, 1000);
+        }
+
+        return {
+          isDatabaseOpen: isDbCommand ? true : state.isDatabaseOpen,
+          isPreviewOpen: isDbCommand ? false : state.isPreviewOpen,
+          messages: [...state.messages, {
+            id: Date.now().toString(),
+            role: 'user',
+            content: text,
+            agentId: targetAgent,
+            timestamp: Date.now()
+          }]
+        };
+      }),
       appendSystemMessage: (agentId, text) => set((state) => ({
         messages: [...state.messages, {
           id: Date.now().toString(),
@@ -241,7 +378,7 @@ export const useAppStore = create<AppState>()(
       })),
       clearChat: () => set({ messages: [] }),
       simulateBuilderFlow: async (prompt) => {
-        const { sendUserMessage, appendSystemMessage, triggerBuild, setBuildSuccess, updateAgentStatus, assignTask, appendAgentOutput } = get();
+        const { sendUserMessage, appendSystemMessage, triggerBuild, setBuildSuccess, updateAgentStatus, assignTask, appendAgentOutput, economyMode, setConsensusState, taskCount } = get();
         
         // a. Adds user message
         sendUserMessage(prompt);
@@ -255,6 +392,34 @@ export const useAppStore = create<AppState>()(
         set({ isOrchestratorThinking: false });
         updateAgentStatus('orchestrator', 'running');
         appendAgentOutput('orchestrator', 'Decomposing task into subtasks.');
+
+        // If Max Power mode, run consensus on the first major task
+        if (economyMode === 'max-power') {
+          setConsensusState({
+            active: true,
+            models: ['Claude 3.5 Opus', 'DeepSeek R1'],
+            agreement: 0,
+            status: 'running'
+          });
+
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          const agreement = Math.floor(Math.random() * (98 - 70 + 1)) + 70;
+          const status = agreement > 85 ? 'agreed' : 'disagreed';
+          
+          setConsensusState({
+            active: true,
+            models: ['Claude 3.5 Opus', 'DeepSeek R1'],
+            agreement,
+            status,
+            diff: status === 'disagreed' ? {
+              left: "const config = {\n  theme: 'dark',\n  animations: true\n};",
+              right: "const config = {\n  theme: 'dark',\n  animations: false,\n  gpuAcceleration: true\n};"
+            } : undefined
+          });
+
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
         
         // c. Posts 3 system messages from different agents with 0.8s gaps
         const subtasks = [
@@ -271,6 +436,149 @@ export const useAppStore = create<AppState>()(
           updateAgentStatus(st.role, 'running');
           appendAgentOutput(st.role, `Executing: ${st.msg}`);
         }
+
+        // Check for database needs
+        const dbKeywords = ['database', 'auth', 'user data', 'store', 'blog', 'posts', 'comments'];
+        const needsDb = dbKeywords.some(kw => prompt.toLowerCase().includes(kw));
+
+        if (needsDb) {
+          appendSystemMessage('orchestrator', "This needs a database. I'll set up Supabase for you.");
+          await new Promise(r => setTimeout(r, 1000));
+          
+          set((state) => ({
+            messages: [...state.messages, {
+              id: `db-setup-${Date.now()}`,
+              role: 'system',
+              agentId: 'executor',
+              content: '⟳ Provisioning database...',
+              timestamp: Date.now(),
+              type: 'text'
+            }]
+          }));
+
+          await new Promise(r => setTimeout(r, 2000));
+
+          set((state) => ({
+            messages: [...state.messages.filter(m => !m.content.includes('Provisioning')), {
+              id: `db-ready-${Date.now()}`,
+              role: 'system',
+              agentId: 'executor',
+              content: 'Database ready',
+              timestamp: Date.now(),
+              type: 'text',
+              terminal: {
+                command: 'supabase init',
+                output: ['Project URL: https://xyz.supabase.co', 'Anon Key: eyJhbG... (masked)', 'Service Key: eyJhbG... (masked)'],
+                exitCode: 0
+              }
+            }]
+          }));
+        }
+
+        // Check for secrets needs
+        if (prompt.toLowerCase().includes('stripe') || prompt.toLowerCase().includes('api key')) {
+          await new Promise(r => setTimeout(r, 1500));
+          set((state) => ({
+            messages: [...state.messages, {
+              id: `secret-req-${Date.now()}`,
+              role: 'orchestrator',
+              content: "I'll need your Stripe API key to proceed with the payment integration. Add it to secrets?",
+              timestamp: Date.now(),
+              type: 'insight'
+            }]
+          }));
+        }
+
+        // Check for package installs
+        if (prompt.toLowerCase().includes('install') || prompt.toLowerCase().includes('add package')) {
+          await new Promise(r => setTimeout(r, 1000));
+          set((state) => ({
+            messages: [...state.messages, {
+              id: `pkg-work-${Date.now()}`,
+              role: 'system',
+              agentId: 'executor',
+              content: '↕ Added 3 packages: prisma, @prisma/client, zod',
+              timestamp: Date.now(),
+              type: 'text'
+            }]
+          }));
+        }
+
+        // Add terminal blocks
+        set((state) => ({
+          messages: [...state.messages, {
+            id: `term-${Date.now()}`,
+            role: 'system',
+            agentId: 'executor',
+            content: prompt.toLowerCase().includes('push') ? 'Pushing to origin...' : 'Installing dependencies...',
+            timestamp: Date.now(),
+            type: 'terminal',
+            terminal: {
+              command: prompt.toLowerCase().includes('push') ? 'git push origin main' : 'npm install',
+              output: prompt.toLowerCase().includes('push')
+                ? ['⟳ Pushing to origin/main...', '✓ Pushed 3 commits to origin/main']
+                : [
+                  'added 142 packages, and audited 143 packages in 2s',
+                  'found 0 vulnerabilities'
+                ],
+              exitCode: 0
+            }
+          }]
+        }));
+
+        // Auto-commit after successful build
+        if (!prompt.toLowerCase().includes('push') && !prompt.toLowerCase().includes('commit')) {
+          await new Promise(r => setTimeout(r, 1000));
+          const commitMsg = `✓ Committed: ${prompt.length > 30 ? prompt.substring(0, 30) + '...' : prompt}`;
+          set((state) => ({
+            messages: [...state.messages, {
+              id: `git-auto-${Date.now()}`,
+              role: 'system',
+              agentId: 'executor',
+              content: commitMsg,
+              timestamp: Date.now(),
+              type: 'text'
+            }]
+          }));
+        } else if (prompt.toLowerCase().includes('commit')) {
+          await new Promise(r => setTimeout(r, 500));
+          set((state) => ({
+            messages: [...state.messages, {
+              id: `git-manual-${Date.now()}`,
+              role: 'system',
+              agentId: 'executor',
+              content: '✓ Committed: Manual update',
+              timestamp: Date.now(),
+              type: 'text'
+            }]
+          }));
+        }
+        await new Promise(r => setTimeout(r, 1000));
+
+        set((state) => ({
+          messages: [...state.messages, {
+            id: `term-dev-${Date.now()}`,
+            role: 'system',
+            agentId: 'executor',
+            content: 'Starting dev server...',
+            timestamp: Date.now(),
+            type: 'terminal',
+            terminal: {
+              command: 'npm run dev',
+              output: [
+                '> dev',
+                '> vite',
+                '',
+                '  VITE v6.0.0  ready in 128 ms',
+                '',
+                '  ➜  Local:   http://localhost:3000/',
+                '  ➜  Network: use --host to expose'
+              ],
+              isStreaming: true
+            }
+          }]
+        }));
+        await new Promise(r => setTimeout(r, 1000));
         
         // d. Posts orchestrator reply
         set((state) => ({
@@ -296,12 +604,51 @@ export const useAppStore = create<AppState>()(
         
         // f. Sets preview as "ready"
         setBuildSuccess(3.2, 12);
+
+        // g. Randomly trigger a build error if not in Max Power mode
+        if (economyMode !== 'max-power' && Math.random() > 0.8) {
+          setTimeout(() => {
+            const { addError } = useErrorStore.getState();
+            addError({
+              type: 'Build Error',
+              message: "Module not found: Can't resolve './components/AuthLanding' in '/src'",
+              file: 'src/App.tsx',
+              line: 3,
+              stack: "Error: Module not found: Can't resolve './components/AuthLanding' in '/src'\n    at resolveModule (webpack/lib/Resolver.js:42:12)\n    at handleBuild (webpack/lib/Compiler.js:156:8)"
+            });
+            set({ buildStatus: 'error' });
+          }, 500);
+        }
+
+        // Create some mock files if none exist
+        if (get().files.length === 0) {
+          get().createFile('App.tsx', 'file', null);
+          get().createFile('index.css', 'file', null);
+          get().createFile('utils.ts', 'file', null);
+        }
+
+        // Update task count and check for insights
+        const newCount = taskCount + 1;
+        set({ taskCount: newCount });
+
+        if (newCount % 5 === 0) {
+          set((state) => ({
+            messages: [...state.messages, {
+              id: `insight-${Date.now()}`,
+              role: 'orchestrator',
+              agentId: '1',
+              content: '📊 Model performance this session: Claude Sonnet won 4/5 code tasks, Gemini Flash handled 8 quick tasks. Saved $0.02 vs Max Power mode.',
+              timestamp: Date.now(),
+              type: 'insight'
+            }]
+          }));
+        }
       },
 
       // 4. FILE STATE
       files: INITIAL_FILES,
-      openTabs: ['f1', 'f2'],
-      activeTab: 'f1',
+      openTabs: [],
+      activeTab: null,
       openFile: (id) => set((state) => {
         const isOpen = state.openTabs.includes(id);
         return {
@@ -351,27 +698,135 @@ export const useAppStore = create<AppState>()(
           files: state.files.map(f => f.id === id ? { ...f, name: newName, extension: f.type === 'file' ? ext : undefined } : f)
         };
       }),
+      duplicateFile: (id) => set((state) => {
+        const file = state.files.find(f => f.id === id);
+        if (!file || file.type === 'folder') return state;
+        
+        const nameParts = file.name.split('.');
+        const ext = nameParts.pop();
+        const baseName = nameParts.join('.');
+        const newName = `${baseName} (copy).${ext}`;
+        
+        const newFile: FileNode = {
+          ...file,
+          id: `file-${Date.now()}`,
+          name: newName,
+        };
+        
+        return { files: [...state.files, newFile] };
+      }),
 
       // 5. BUILD STATE
       buildStatus: 'idle',
       buildTime: 0,
       filesGenerated: 0,
       totalTokens: 0,
-      previewUrl: 'localhost:3000',
+      previewUrl: 'https://ais-pre-xoupfcetkt32dm5uetga6k-107535744547.europe-west1.run.app',
+      isPreviewOpen: true,
       triggerBuild: () => set({ buildStatus: 'building' }),
       setBuildSuccess: (time, filesCount) => set({
         buildStatus: 'success',
         buildTime: time,
         filesGenerated: filesCount,
-        previewUrl: 'localhost:3000'
+        previewUrl: 'https://ais-pre-xoupfcetkt32dm5uetga6k-107535744547.europe-west1.run.app'
       }),
       setBuildError: () => set({ buildStatus: 'error' }),
+      togglePreview: (force) => set((state) => ({ 
+        isPreviewOpen: force !== undefined ? force : !state.isPreviewOpen 
+      })),
+
+      // 7. DEPLOY STATE
+      deployStatus: 'idle',
+      deployProgress: 0,
+      deployLogs: [],
+      deployHistory: [
+        {
+          id: 'dep-1',
+          status: 'success',
+          target: 'Vercel',
+          environment: 'Production',
+          duration: '42s',
+          commit: 'a1b2c3d',
+          timestamp: '2 hours ago',
+          url: 'https://tesseract-demo.vercel.app',
+          logs: ['→ Installing dependencies...', '✓ 200 OK']
+        },
+        {
+          id: 'dep-2',
+          status: 'error',
+          target: 'Netlify',
+          environment: 'Staging',
+          duration: '15s',
+          commit: 'f5e4d3c',
+          timestamp: '5 hours ago',
+          url: '',
+          logs: ['→ Building application...', 'error: Build failed']
+        }
+      ],
+      startDeploy: async (target, env, branch) => {
+        set({ deployStatus: 'building', deployProgress: 0, deployLogs: [] });
+        
+        const logs = [
+          "→ Installing dependencies...",
+          "  added 847 packages in 12s",
+          "→ Building application...",
+          "  ✓ 23 modules transformed",
+          "  ✓ Bundle size: 142kb (gzipped: 48kb)",
+          "→ Optimizing assets...",
+          "  ✓ Images compressed (saved 34%)",
+          `→ Deploying to ${target}...`,
+          "  ✓ Uploaded 12 files",
+          "  ✓ Edge functions deployed",
+          "→ Running health check...",
+          "  ✓ 200 OK",
+          "",
+          "✅ Deployment successful!",
+          `🔗 https://tesseract-demo.${target.toLowerCase()}.app`
+        ];
+
+        for (let i = 0; i < logs.length; i++) {
+          await new Promise(r => setTimeout(r, 400));
+          set(state => ({ 
+            deployLogs: [...state.deployLogs, logs[i]],
+            deployProgress: Math.min(((i + 1) / logs.length) * 100, 100)
+          }));
+        }
+
+        const newDeploy: DeployEntry = {
+          id: `dep-${Date.now()}`,
+          status: 'success',
+          target: target as any,
+          environment: env as any,
+          duration: '38s',
+          commit: 'g7h8i9j',
+          timestamp: 'Just now',
+          url: `https://tesseract-demo.${target.toLowerCase()}.app`,
+          logs: logs
+        };
+
+        set(state => ({ 
+          deployStatus: 'success',
+          deployHistory: [newDeploy, ...state.deployHistory]
+        }));
+      },
+      rollbackDeploy: (id) => {
+        // Mock rollback
+        set(state => ({
+          deployHistory: state.deployHistory.map(d => d.id === id ? { ...d, timestamp: 'Rolled back just now' } : d)
+        }));
+      },
 
       // 6. SETTINGS
       parallelLimit: 3,
       autoRoute: true,
+      economyMode: 'balanced',
+      setEconomyMode: (mode) => set({ economyMode: mode }),
       apiKeys: {},
       setApiKeys: (keys) => set({ apiKeys: keys }),
+
+      // 8. MAX POWER FEATURES
+      consensusState: null,
+      setConsensusState: (consensusState) => set({ consensusState }),
     }),
     {
       name: 'array-ide-storage',

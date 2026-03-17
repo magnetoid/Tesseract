@@ -22,7 +22,7 @@ import {
 import AgentPanel from './AgentPanel';
 import BottomPanel from './BottomPanel';
 import { useAppStore, FileNode } from './useAppStore';
-import { cn } from './utils';
+import { cn } from './lib/utils';
 
 const getFileIcon = (extension?: string) => {
   switch (extension) {

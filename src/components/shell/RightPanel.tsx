@@ -1,0 +1,87 @@
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Library, 
+  Search, 
+  ChevronRight,
+  FolderTree
+} from 'lucide-react';
+import { cn } from '../../lib/utils';
+import { useLayoutStore } from '../../stores/layoutStore';
+import FileTree from '../right-panel/FileTree';
+import SearchView from '../right-panel/SearchView';
+import LibraryView from '../right-panel/LibraryView';
+
+export function RightPanel({ className }: { className?: string }) {
+  const { 
+    rightPanelOpen, 
+    toggleRightPanel, 
+    rightPanelView, 
+    setRightPanelView 
+  } = useLayoutStore();
+
+  const renderContent = () => {
+    switch (rightPanelView) {
+      case 'files':
+        return <FileTree />;
+      case 'library':
+        return <LibraryView />;
+      case 'search':
+        return <SearchView />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <AnimatePresence initial={false}>
+      {rightPanelOpen && (
+        <motion.aside
+          initial={{ width: 0, opacity: 0 }}
+          animate={{ width: 260, opacity: 1 }}
+          exit={{ width: 0, opacity: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className={cn("bg-[#141416] border-l border-[#232328] flex flex-col overflow-hidden shrink-0", className)}
+        >
+          <div className="w-[260px] h-full flex flex-col">
+            <header className="h-9 px-3 flex items-center justify-between border-b border-[#232328] shrink-0">
+              <span className="text-xs font-medium text-[#e8e8ed] capitalize">
+                {rightPanelView === 'files' ? 'File tree' : rightPanelView}
+              </span>
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={() => setRightPanelView('files')}
+                  className={cn("p-1 rounded transition-colors", rightPanelView === 'files' ? "text-violet-400 bg-violet-500/10" : "text-[#6b6b7a] hover:text-[#e8e8ed]")}
+                >
+                  <FolderTree size={14} />
+                </button>
+                <button 
+                  onClick={() => setRightPanelView('library')}
+                  className={cn("p-1 rounded transition-colors", rightPanelView === 'library' ? "text-violet-400 bg-violet-500/10" : "text-[#6b6b7a] hover:text-[#e8e8ed]")}
+                >
+                  <Library size={14} />
+                </button>
+                <button 
+                  onClick={() => setRightPanelView('search')}
+                  className={cn("p-1 rounded transition-colors", rightPanelView === 'search' ? "text-violet-400 bg-violet-500/10" : "text-[#6b6b7a] hover:text-[#e8e8ed]")}
+                >
+                  <Search size={14} />
+                </button>
+                <div className="w-[1px] h-3 bg-[#232328] mx-1" />
+                <button 
+                  onClick={toggleRightPanel}
+                  className="p-1 text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </header>
+            <div className="flex-1 overflow-hidden">
+              {renderContent()}
+            </div>
+          </div>
+        </motion.aside>
+      )}
+    </AnimatePresence>
+  );
+}

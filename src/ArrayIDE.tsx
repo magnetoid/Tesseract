@@ -5,7 +5,7 @@ import PreviewPanel from './PreviewPanel';
 import IDEShell from './IDEShell';
 import ModelConfigDialog from './ModelConfigDialog';
 import { useMode } from './useAgentStore';
-import { cn } from './utils';
+import { cn } from './lib/utils';
 
 export default function ArrayIDE() {
   const mode = useMode();

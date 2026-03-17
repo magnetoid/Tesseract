@@ -1,7 +1,7 @@
 import React from 'react';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 import { useAgents, AgentRole } from './useAgentStore';
-import { cn } from './utils';
+import { cn } from './lib/utils';
 
 const getAgentColor = (role: AgentRole) => {
   switch (role) {

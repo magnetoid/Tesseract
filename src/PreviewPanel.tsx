@@ -3,6 +3,7 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 import * as Separator from '@radix-ui/react-separator';
 import * as ToggleGroup from '@radix-ui/react-toggle-group';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
+import * as Popover from '@radix-ui/react-popover';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -14,16 +15,22 @@ import {
   ExternalLink, 
   Code2, 
   Code,
-  Sparkles
+  Sparkles,
+  Camera,
+  QrCode,
+  Terminal as TerminalIcon,
+  X
 } from 'lucide-react';
 import { useAppStore } from './useAppStore';
-import { cn } from './utils';
+import { cn } from './lib/utils';
+import { toast } from 'sonner';
 
 export default function PreviewPanel() {
   const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [viewSource, setViewSource] = useState(false);
   const [url, setUrl] = useState('localhost:3000');
   const [isEditingUrl, setIsEditingUrl] = useState(false);
+  const [showConsole, setShowConsole] = useState(false);
 
   const agents = useAppStore(state => state.agents);
   const messages = useAppStore(state => state.messages);
@@ -117,6 +124,68 @@ export default function PreviewPanel() {
           <Tooltip.Provider delayDuration={200}>
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
+                <button 
+                  onClick={() => {
+                    toast.success('Screenshot saved');
+                  }}
+                  className="p-1.5 text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors rounded"
+                >
+                  <Camera size={14} />
+                </button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content className="bg-[#1c1c20] text-[#e8e8ed] text-xs px-2 py-1 rounded border border-[#2a2a30] shadow-xl z-50" sideOffset={5}>
+                  Capture screenshot
+                  <Tooltip.Arrow className="fill-[#2a2a30]" />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <button className="p-1.5 text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors rounded">
+                  <QrCode size={14} />
+                </button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content className="bg-[#1c1c20] border border-[#2a2a30] p-4 rounded-xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200" sideOffset={5}>
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-32 h-32 bg-white p-2 rounded-lg">
+                      <svg viewBox="0 0 100 100" className="w-full h-full text-black">
+                        <path d="M0 0h30v10H10v20H0V0zm70 0h30v30h-10V10H70V0zM0 70h10v20h20v10H0V70zm100 30H70v-10h20v-20h10v30zM20 20h20v20H20V20zm40 0h20v20H60V20zm0 40h20v20H60V60zm-40 0h20v20H20V60z" fill="currentColor" />
+                        <rect x="25" y="25" width="10" height="10" fill="currentColor" />
+                        <rect x="65" y="25" width="10" height="10" fill="currentColor" />
+                        <rect x="65" y="65" width="10" height="10" fill="currentColor" />
+                        <rect x="25" y="65" width="10" height="10" fill="currentColor" />
+                        <rect x="45" y="45" width="10" height="10" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <span className="text-[#e8e8ed] text-xs font-medium">Scan to preview on mobile</span>
+                  </div>
+                  <Popover.Arrow className="fill-[#2a2a30]" />
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <button 
+                  onClick={() => setShowConsole(!showConsole)}
+                  className={cn("p-1.5 rounded transition-colors", showConsole ? "bg-violet-500/20 text-violet-400" : "text-[#6b6b7a] hover:text-[#e8e8ed]")}
+                >
+                  <TerminalIcon size={14} />
+                </button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content className="bg-[#1c1c20] text-[#e8e8ed] text-xs px-2 py-1 rounded border border-[#2a2a30] shadow-xl z-50" sideOffset={5}>
+                  Toggle Console
+                  <Tooltip.Arrow className="fill-[#2a2a30]" />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
                 <button className="p-1.5 text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors rounded">
                   <ExternalLink size={14} />
                 </button>
@@ -171,10 +240,10 @@ export default function PreviewPanel() {
         ) : (
           <div 
             className={cn(
-              "transition-all duration-300 ease-in-out border border-[#2a2a30] bg-[#141416] flex items-center justify-center",
+              "transition-all duration-300 ease-in-out border border-[#2a2a30] bg-[#141416] flex items-center justify-center relative overflow-hidden",
               viewport === 'desktop' ? "w-full h-full border-0" : 
-              viewport === 'tablet' ? "w-[768px] h-[calc(100%-32px)] rounded-md shadow-2xl" : 
-              "w-[390px] h-[calc(100%-32px)] rounded-3xl shadow-2xl"
+              viewport === 'tablet' ? "w-[768px] h-[calc(100%-32px)] rounded-xl shadow-2xl border-8 border-[#2a2a30]" : 
+              "w-[390px] h-[calc(100%-32px)] rounded-[3rem] shadow-2xl border-[12px] border-[#2a2a30]"
             )}
           >
             {buildStatus === 'success' ? (
@@ -189,6 +258,47 @@ export default function PreviewPanel() {
                   <Code size={18} />
                 </div>
                 <span className="text-[#6b6b7a] text-sm">Waiting for first build</span>
+              </div>
+            )}
+
+            {/* Console Overlay */}
+            {showConsole && (
+              <div className="absolute bottom-0 left-0 right-0 h-32 bg-[#0d0d0f]/90 backdrop-blur-md border-t border-[#2a2a30] p-3 font-mono text-[10px] animate-in slide-in-from-bottom duration-200">
+                <div className="flex items-center justify-between mb-2 text-[#6b6b7a]">
+                  <span className="uppercase tracking-widest font-bold">Console</span>
+                  <button onClick={() => setShowConsole(false)} className="hover:text-[#e8e8ed]">
+                    <X size={12} />
+                  </button>
+                </div>
+                <ScrollArea.Root className="h-20">
+                  <ScrollArea.Viewport className="w-full h-full">
+                    <div className="space-y-1">
+                      <div className="flex gap-2">
+                        <span className="text-[#6b6b7a]">[03:10:37]</span>
+                        <span className="text-emerald-400">log:</span>
+                        <span className="text-[#e8e8ed]">App initialized successfully</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-[#6b6b7a]">[03:10:38]</span>
+                        <span className="text-emerald-400">log:</span>
+                        <span className="text-[#e8e8ed]">Vite HMR connected</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-[#6b6b7a]">[03:10:40]</span>
+                        <span className="text-blue-400">info:</span>
+                        <span className="text-[#e8e8ed]">Fetching user data...</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-[#6b6b7a]">[03:10:41]</span>
+                        <span className="text-amber-400">warn:</span>
+                        <span className="text-[#e8e8ed]">Performance warning: slow render detected</span>
+                      </div>
+                    </div>
+                  </ScrollArea.Viewport>
+                  <ScrollArea.Scrollbar orientation="vertical" className="flex select-none touch-none p-0.5 bg-transparent w-1.5 transition-colors">
+                    <ScrollArea.Thumb className="flex-1 bg-[#2a2a30] rounded-full" />
+                  </ScrollArea.Scrollbar>
+                </ScrollArea.Root>
               </div>
             )}
           </div>

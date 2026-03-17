@@ -13,8 +13,18 @@ import {
   XCircle,
   ChevronRight,
   ChevronDown,
+  Rocket,
+  ExternalLink,
+  Eye,
+  RotateCcw,
+  Clock,
+  Hash,
+  Activity
 } from "lucide-react";
 import { useAgents, useTasks, Task } from "./useAgentStore";
+import { useAppStore } from "./useAppStore";
+import { cn } from "./lib/utils";
+import * as AlertDialog from "@radix-ui/react-alert-dialog";
 
 type LogSource =
   | "ORCHESTRATOR"
@@ -187,6 +197,10 @@ export default function BottomPanel() {
   const agentsMap = useAgents();
   const agents = Object.values(agentsMap);
   const tasks = useTasks();
+  const deployHistory = useAppStore(state => state.deployHistory);
+  const rollbackDeploy = useAppStore(state => state.rollbackDeploy);
+
+  const [expandedDeploy, setExpandedDeploy] = useState<string | null>(null);
 
   const [localLogs, setLocalLogs] = useState<TerminalLog[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -300,6 +314,12 @@ export default function BottomPanel() {
             >
               <ListTree size={14} /> Task Tree
             </Tabs.Trigger>
+            <Tabs.Trigger
+              value="deploys"
+              className="px-4 py-2 text-xs font-medium text-text-muted data-[state=active]:text-text-primary data-[state=active]:border-b-2 data-[state=active]:border-accent hover:text-text-primary outline-none flex items-center gap-2 transition-colors"
+            >
+              <Rocket size={14} /> Deploys
+            </Tabs.Trigger>
           </Tabs.List>
 
           <div className="flex items-center gap-1">
@@ -394,6 +414,151 @@ export default function BottomPanel() {
               {treeData.map((node) => (
                 <TaskTreeNode key={node.id} node={node} />
               ))}
+            </ScrollArea.Viewport>
+            <ScrollArea.Scrollbar
+              orientation="vertical"
+              className="flex select-none touch-none p-0.5 bg-transparent hover:bg-elevated w-2.5 transition-colors"
+            >
+              <ScrollArea.Thumb className="flex-1 bg-border-dim rounded-[10px]" />
+            </ScrollArea.Scrollbar>
+          </ScrollArea.Root>
+        </Tabs.Content>
+
+        <Tabs.Content
+          value="deploys"
+          className="flex-1 min-h-0 outline-none bg-base"
+        >
+          <ScrollArea.Root className="h-full w-full">
+            <ScrollArea.Viewport className="w-full h-full">
+              <div className="p-4">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="text-[#6b6b7a] border-b border-[#2a2a30]">
+                      <th className="pb-2 font-medium px-2">Status</th>
+                      <th className="pb-2 font-medium px-2">Target</th>
+                      <th className="pb-2 font-medium px-2">Duration</th>
+                      <th className="pb-2 font-medium px-2">Commit</th>
+                      <th className="pb-2 font-medium px-2">Timestamp</th>
+                      <th className="pb-2 font-medium px-2 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#2a2a30]">
+                    {deployHistory.map((deploy, index) => (
+                      <React.Fragment key={deploy.id}>
+                        <tr className={cn(
+                          "group hover:bg-[#1c1c20] transition-colors",
+                          deploy.status === 'error' ? "bg-red-500/5" : ""
+                        )}>
+                          <td className="py-3 px-2">
+                            <div className="flex items-center gap-2">
+                              {deploy.status === 'success' ? (
+                                <CheckCircle2 size={14} className="text-emerald-500" />
+                              ) : deploy.status === 'building' ? (
+                                <CircleDashed size={14} className="text-amber-500 animate-spin" />
+                              ) : (
+                                <XCircle size={14} className="text-red-500" />
+                              )}
+                              {index === 0 && deploy.status === 'success' && (
+                                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">LIVE</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-2">
+                            <div className="flex flex-col">
+                              <span className="text-[#e8e8ed] font-medium">{deploy.target}</span>
+                              <span className="text-[#6b6b7a] text-[10px]">{deploy.environment}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-2 text-[#6b6b7a] font-mono">{deploy.duration}</td>
+                          <td className="py-3 px-2">
+                            <div className="flex items-center gap-1 text-[#6b6b7a] font-mono">
+                              <Hash size={10} />
+                              {deploy.commit}
+                            </div>
+                          </td>
+                          <td className="py-3 px-2 text-[#6b6b7a]">{deploy.timestamp}</td>
+                          <td className="py-3 px-2 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              {deploy.url && (
+                                <a 
+                                  href={deploy.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 text-[#6b6b7a] hover:text-[#e8e8ed] rounded hover:bg-[#2a2a30] transition-colors"
+                                  title="Open URL"
+                                >
+                                  <ExternalLink size={14} />
+                                </a>
+                              )}
+                              <button 
+                                onClick={() => setExpandedDeploy(expandedDeploy === deploy.id ? null : deploy.id)}
+                                className={cn(
+                                  "p-1.5 rounded transition-colors",
+                                  expandedDeploy === deploy.id ? "bg-violet-500/20 text-violet-400" : "text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#2a2a30]"
+                                )}
+                                title="View Logs"
+                              >
+                                <Eye size={14} />
+                              </button>
+                              
+                              <AlertDialog.Root>
+                                <AlertDialog.Trigger asChild>
+                                  <button 
+                                    className="p-1.5 text-[#6b6b7a] hover:text-amber-400 rounded hover:bg-[#2a2a30] transition-colors"
+                                    title="Rollback"
+                                  >
+                                    <RotateCcw size={14} />
+                                  </button>
+                                </AlertDialog.Trigger>
+                                <AlertDialog.Portal>
+                                  <AlertDialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" />
+                                  <AlertDialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-[#1c1c20] border border-[#2a2a30] rounded-xl p-6 shadow-2xl z-[101]">
+                                    <AlertDialog.Title className="text-[#e8e8ed] font-bold text-lg mb-2">Confirm Rollback</AlertDialog.Title>
+                                    <AlertDialog.Description className="text-[#6b6b7a] text-sm mb-6">
+                                      Are you sure you want to rollback to deployment <span className="text-[#e8e8ed] font-mono">{deploy.commit}</span>? This will replace the current live version.
+                                    </AlertDialog.Description>
+                                    <div className="flex justify-end gap-3">
+                                      <AlertDialog.Cancel asChild>
+                                        <button className="px-4 py-2 text-[#6b6b7a] hover:text-[#e8e8ed] font-medium transition-colors">Cancel</button>
+                                      </AlertDialog.Cancel>
+                                      <AlertDialog.Action asChild>
+                                        <button 
+                                          onClick={() => rollbackDeploy(deploy.id)}
+                                          className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white font-bold rounded-lg transition-all"
+                                        >
+                                          Confirm Rollback
+                                        </button>
+                                      </AlertDialog.Action>
+                                    </div>
+                                  </AlertDialog.Content>
+                                </AlertDialog.Portal>
+                              </AlertDialog.Root>
+                            </div>
+                          </td>
+                        </tr>
+                        {expandedDeploy === deploy.id && (
+                          <tr>
+                            <td colSpan={6} className="bg-[#0d0d0f] p-4 border-x border-b border-[#2a2a30]">
+                              <div className="font-mono text-[10px] leading-relaxed space-y-1">
+                                {deploy.logs.map((log, i) => (
+                                  <div key={i} className={cn(
+                                    log.startsWith('→') ? "text-[#e8e8ed]" : 
+                                    log.startsWith('  ✓') || log.startsWith('✅') ? "text-emerald-400" :
+                                    log.includes('error') ? "text-red-400" :
+                                    "text-[#6b6b7a]"
+                                  )}>
+                                    {log}
+                                  </div>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </ScrollArea.Viewport>
             <ScrollArea.Scrollbar
               orientation="vertical"

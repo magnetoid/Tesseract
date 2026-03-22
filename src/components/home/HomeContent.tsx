@@ -14,9 +14,15 @@ import {
   RefreshCw, 
   ChevronDown, 
   ChevronLeft, 
-  ChevronRight 
+  ChevronRight,
+  Lock,
+  AlertCircle
 } from 'lucide-react';
+import * as Tooltip from '@radix-ui/react-tooltip';
 import { useProjectStore, Project } from '../../stores/projectStore';
+import { useLayoutStore } from '../../stores/layoutStore';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { UpgradeDialog } from '../shared/UpgradeDialog';
 import { cn } from '../../lib/utils';
 
 const PROJECT_TYPES = [
@@ -47,10 +53,16 @@ const EXAMPLE_PROMPTS = [
 
 export function HomeContent() {
   const navigate = useNavigate();
-  const { projects, addProject } = useProjectStore();
+  const { projects, addProject, getProjectsByWorkspace } = useProjectStore();
+  const { homeSidebarCollapsed } = useLayoutStore();
+  const { getActiveWorkspace } = useWorkspaceStore();
+  const activeWorkspace = getActiveWorkspace();
+  const workspaceProjects = getProjectsByWorkspace(activeWorkspace?.id || '');
+  
   const [prompt, setPrompt] = useState('');
   const [isPlanning, setIsPlanning] = useState(false);
   const [shuffledPrompts, setShuffledPrompts] = useState<string[]>([]);
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -73,11 +85,19 @@ export function HomeContent() {
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || !activeWorkspace) return;
+
+    // Check plan limits
+    const limit = activeWorkspace.plan === 'free' ? 3 : activeWorkspace.plan === 'pro' ? 25 : Infinity;
+    if (workspaceProjects.length >= limit) {
+      setUpgradeDialogOpen(true);
+      return;
+    }
 
     const newId = Math.random().toString(36).substring(7);
     const newProject: Project = {
       id: newId,
+      workspaceId: activeWorkspace.id,
       name: prompt.slice(0, 20) + '...',
       description: prompt,
       lastEdited: 'Just now',
@@ -97,164 +117,182 @@ export function HomeContent() {
   };
 
   return (
-    <main className="flex-1 ml-[220px] overflow-y-auto bg-[#0a0a0c] h-screen">
-      <div className="max-w-3xl mx-auto px-6 py-8">
-        {/* Workspace Badge */}
-        <div className="flex justify-center">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-[#141416] border border-[#232328] rounded-full text-sm text-[#6b6b7a] cursor-pointer hover:border-[#7c6ff7]/30 transition-colors">
-            <div className="w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center text-white text-[10px] font-bold">
-              M
+    <Tooltip.Provider delayDuration={200}>
+      <main className="flex-1 overflow-y-auto bg-page h-screen">
+        <div className="max-w-3xl mx-auto px-6 py-8">
+          {/* Workspace Badge */}
+          <div className="flex justify-center">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-surface border border-default rounded-full text-sm text-secondary cursor-pointer hover:border-accent/30 transition-colors">
+              <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center text-white text-[10px] font-bold">
+                {activeWorkspace?.name.charAt(0)}
+              </div>
+              <span>{activeWorkspace?.name}</span>
+              <ChevronDown size={14} />
             </div>
-            <span>Marko's Workspace</span>
-            <ChevronDown size={14} />
           </div>
-        </div>
 
-        {/* Greeting */}
-        <h1 className="text-3xl font-medium text-[#e8e8ed] text-center mt-6">
-          Hi Marko, what do you want to make?
-        </h1>
+          {/* Greeting */}
+          <h1 className="text-3xl font-medium text-primary text-center mt-6">
+            Hi Marko, what do you want to make?
+          </h1>
 
-        {/* Chat Input */}
-        <div className="max-w-2xl mx-auto mt-8">
-          <form 
-            onSubmit={handleSubmit}
-            className="bg-[#141416] border border-[#232328] rounded-2xl p-3 focus-within:border-violet-500/30 transition-all shadow-xl"
-          >
-            <textarea
-              ref={textareaRef}
-              value={prompt}
-              onChange={handleTextareaChange}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-              placeholder="Describe your idea, Agent will bring it to life..."
-              className="w-full bg-transparent border-none outline-none text-[#e8e8ed] text-base placeholder-[#44444d] resize-none min-h-[44px] max-h-[120px] py-1"
-            />
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#232328]">
-              <button type="button" className="p-1.5 text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#1c1c20] rounded-md transition-colors">
-                <Plus size={18} />
-              </button>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#6b6b7a]">Plan</span>
+          {/* Chat Input */}
+          <div className="max-w-2xl mx-auto mt-8">
+            <form 
+              onSubmit={handleSubmit}
+              className="bg-surface border border-default rounded-2xl p-3 focus-within:border-accent/30 transition-all shadow-xl"
+            >
+              <textarea
+                ref={textareaRef}
+                value={prompt}
+                onChange={handleTextareaChange}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                placeholder="Describe your idea, Agent will bring it to life..."
+                className="w-full bg-transparent border-none outline-none text-primary text-base placeholder-tertiary resize-none min-h-[44px] max-h-[120px] py-1"
+              />
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-default">
+                <button type="button" className="p-1.5 text-secondary hover:text-primary hover:bg-elevated rounded-md transition-colors">
+                  <Plus size={18} />
+                </button>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-secondary">Plan</span>
+                    <button 
+                      type="button"
+                      onClick={() => setIsPlanning(!isPlanning)}
+                      className={cn(
+                        "w-8 h-4 rounded-full transition-colors relative",
+                        isPlanning ? "bg-accent" : "bg-elevated"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all",
+                        isPlanning ? "left-4.5" : "left-0.5"
+                      )} />
+                    </button>
+                  </div>
                   <button 
-                    type="button"
-                    onClick={() => setIsPlanning(!isPlanning)}
-                    className={cn(
-                      "w-8 h-4 rounded-full transition-colors relative",
-                      isPlanning ? "bg-violet-500" : "bg-[#1c1c20]"
-                    )}
+                    type="submit"
+                    disabled={!prompt.trim()}
+                    className="w-8 h-8 bg-accent hover:bg-accent-hover disabled:bg-elevated disabled:text-tertiary text-white rounded-full flex items-center justify-center transition-colors shadow-lg"
                   >
-                    <div className={cn(
-                      "absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all",
-                      isPlanning ? "left-4.5" : "left-0.5"
-                    )} />
+                    <ArrowUp size={18} />
                   </button>
                 </div>
-                <button 
-                  type="submit"
-                  disabled={!prompt.trim()}
-                  className="w-8 h-8 bg-violet-500 hover:bg-violet-400 disabled:bg-[#1c1c20] disabled:text-[#44444d] text-white rounded-full flex items-center justify-center transition-colors shadow-lg"
-                >
-                  <ArrowUp size={18} />
-                </button>
               </div>
-            </div>
-          </form>
-        </div>
-
-        {/* Project Type Icons */}
-        <div className="relative mt-10 group">
-          <button 
-            onClick={() => scroll('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-8 h-8 bg-[#141416] border border-[#232328] rounded-full flex items-center justify-center text-[#6b6b7a] hover:text-[#e8e8ed] opacity-0 group-hover:opacity-100 transition-opacity z-10"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <div 
-            ref={scrollRef}
-            className="flex justify-center gap-6 overflow-x-auto no-scrollbar px-4"
-          >
-            {PROJECT_TYPES.map((type) => (
-              <button 
-                key={type.id}
-                onClick={() => setPrompt(type.prompt)}
-                className="flex flex-col items-center gap-2 shrink-0 group/type"
-              >
-                <div className="w-14 h-14 bg-[#141416] border border-[#232328] rounded-xl flex items-center justify-center text-[#6b6b7a] group-hover/type:border-violet-500/50 group-hover/type:text-violet-500 transition-all">
-                  <type.icon size={24} />
-                </div>
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-[#6b6b7a] group-hover/type:text-[#e8e8ed]">
-                  {type.label}
-                </span>
-              </button>
-            ))}
+            </form>
+            
+            {activeWorkspace?.plan === 'free' && workspaceProjects.length >= 3 && (
+              <div className="mt-3 flex items-center gap-2 justify-center text-xs text-warning">
+                <AlertCircle size={14} />
+                <span>Free plan limit reached (3/3 projects). <button onClick={() => setUpgradeDialogOpen(true)} className="underline font-bold">Upgrade to create more</button></span>
+              </div>
+            )}
           </div>
-          <button 
-            onClick={() => scroll('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-8 h-8 bg-[#141416] border border-[#232328] rounded-full flex items-center justify-center text-[#6b6b7a] hover:text-[#e8e8ed] opacity-0 group-hover:opacity-100 transition-opacity z-10"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
 
-        {/* Example Prompts */}
-        <div className="text-center mt-10">
-          <div className="flex items-center justify-center gap-2 text-xs text-[#6b6b7a] mb-4">
-            <span>Try an example prompt</span>
-            <button onClick={shufflePrompts} className="hover:text-[#e8e8ed] transition-colors">
-              <RefreshCw size={12} />
+          {/* Project Type Icons */}
+          <div className="relative mt-10 group">
+            <button 
+              onClick={() => scroll('left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-8 h-8 bg-surface border border-default rounded-full flex items-center justify-center text-secondary hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <div 
+              ref={scrollRef}
+              className="flex justify-center gap-6 overflow-x-auto no-scrollbar px-4"
+            >
+              {PROJECT_TYPES.map((type) => (
+                <button 
+                  key={type.id}
+                  onClick={() => setPrompt(type.prompt)}
+                  className="flex flex-col items-center gap-2 shrink-0 group/type"
+                >
+                  <div className="w-14 h-14 bg-surface border border-default rounded-xl flex items-center justify-center text-secondary group-hover/type:border-accent/50 group-hover/type:text-accent transition-all">
+                    <type.icon size={24} />
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-secondary group-hover/type:text-primary">
+                    {type.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <button 
+              onClick={() => scroll('right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-8 h-8 bg-surface border border-default rounded-full flex items-center justify-center text-secondary hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            >
+              <ChevronRight size={16} />
             </button>
           </div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {shuffledPrompts.map((p) => (
-              <button 
-                key={p}
-                onClick={() => setPrompt(p)}
-                className="bg-[#141416] border border-[#232328] rounded-full px-4 py-1.5 text-sm text-[#6b6b7a] hover:text-[#e8e8ed] hover:border-violet-500/30 transition-all"
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        </div>
 
-        {/* Recent Projects */}
-        <div className="mt-12 border-t border-[#232328] pt-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-medium text-[#e8e8ed]">Your recent Projects</h2>
-            <Link to="/projects" className="text-sm text-[#6b6b7a] hover:text-violet-500 transition-colors">
-              View All →
-            </Link>
+          {/* Example Prompts */}
+          <div className="text-center mt-10">
+            <div className="flex items-center justify-center gap-2 text-xs text-secondary mb-4">
+              <span>Try an example prompt</span>
+              <button onClick={shufflePrompts} className="hover:text-primary transition-colors">
+                <RefreshCw size={12} />
+              </button>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              {shuffledPrompts.map((p) => (
+                <button 
+                  key={p}
+                  onClick={() => setPrompt(p)}
+                  className="bg-surface border border-default rounded-full px-4 py-1.5 text-sm text-secondary hover:text-primary hover:border-accent/30 transition-all"
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-4">
-            {projects.slice(0, 3).map((project) => (
-              <Link 
-                key={project.id}
-                to={`/project/${project.id}`}
-                className="group bg-[#141416] border border-[#232328] rounded-xl overflow-hidden hover:border-violet-500/30 transition-all"
-              >
-                <div className="h-[120px] bg-[#0a0a0c] flex items-center justify-center p-4">
-                  <div className="w-12 h-12 rounded-lg bg-[#1c1c20] flex items-center justify-center text-violet-500 group-hover:scale-110 transition-transform">
-                    {(() => {
-                      const Icon = PROJECT_TYPES.find(t => t.id === project.type)?.icon || Globe;
-                      return <Icon size={24} />;
-                    })()}
-                  </div>
-                </div>
-                <div className="p-3">
-                  <h3 className="text-sm font-medium text-[#e8e8ed] truncate">{project.name}</h3>
-                  <p className="text-xs text-[#6b6b7a] mt-1">Edited {project.lastEdited}</p>
-                </div>
+
+          {/* Recent Projects */}
+          <div className="mt-12 border-t border-default pt-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-medium text-primary">Your recent Projects</h2>
+              <Link to="/projects" className="text-sm text-secondary hover:text-accent transition-colors">
+                View All →
               </Link>
-            ))}
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {workspaceProjects.slice(0, 3).map((project) => (
+                <Link 
+                  key={project.id}
+                  to={`/project/${project.id}`}
+                  className="group bg-surface border border-default rounded-xl overflow-hidden hover:border-accent/30 transition-all"
+                >
+                  <div className="h-[120px] bg-page flex items-center justify-center p-4">
+                    <div className="w-12 h-12 rounded-lg bg-elevated flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
+                      {(() => {
+                        const Icon = PROJECT_TYPES.find(t => t.id === project.type)?.icon || Globe;
+                        return <Icon size={24} />;
+                      })()}
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <h3 className="text-sm font-medium text-primary truncate">{project.name}</h3>
+                    <p className="text-xs text-secondary mt-1">Edited {project.lastEdited}</p>
+                  </div>
+                </Link>
+              ))}
+              {workspaceProjects.length === 0 && (
+                <div className="col-span-3 py-12 flex flex-col items-center justify-center text-tertiary border border-dashed border-default rounded-xl">
+                  <Plus size={32} className="mb-2 opacity-20" />
+                  <p className="text-sm">No projects in this workspace yet.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </main>
+        
+        <UpgradeDialog open={upgradeDialogOpen} onOpenChange={setUpgradeDialogOpen} />
+      </main>
+    </Tooltip.Provider>
   );
 }
+

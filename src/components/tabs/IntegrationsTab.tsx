@@ -63,21 +63,21 @@ export default function IntegrationsTab() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#0a0a0c] overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-page overflow-hidden">
       {/* HEADER */}
-      <div className="h-12 bg-[#141416] flex items-center justify-between px-4 shrink-0 border-b border-[#232328]">
+      <div className="h-12 bg-surface flex items-center justify-between px-4 shrink-0 border-b border-default">
         <div className="flex items-center gap-2">
-          <Layers size={18} className="text-violet-400" />
-          <h2 className="text-sm font-bold text-[#e8e8ed]">Integrations</h2>
+          <Layers size={18} className="text-accent" />
+          <h2 className="text-sm font-bold text-primary">Integrations</h2>
         </div>
         <div className="relative w-64">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#44444d]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary" />
           <input 
             type="text" 
             placeholder="Search integrations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#0a0a0c] border border-[#232328] rounded-lg pl-9 pr-3 py-1.5 text-xs text-[#e8e8ed] outline-none focus:border-violet-500/50 transition-colors"
+            className="w-full bg-page border border-default rounded-lg pl-9 pr-3 py-1.5 text-xs text-primary outline-none focus:border-accent/50 transition-colors"
           />
         </div>
       </div>
@@ -92,7 +92,7 @@ export default function IntegrationsTab() {
             return (
               <div 
                 key={item.id}
-                className="bg-[#141416] rounded-xl border border-[#232328] p-4 hover:border-[#44444d] transition-all group relative overflow-hidden"
+                className="bg-surface rounded-xl border border-default p-4 hover:border-tertiary transition-all group relative overflow-hidden"
               >
                 {/* Background Glow */}
                 <div className={cn(
@@ -101,70 +101,70 @@ export default function IntegrationsTab() {
                 )} />
 
                 <div className="flex items-start justify-between mb-4 relative z-10">
-                  <div className={cn("p-2 rounded-lg bg-[#0a0a0c] border border-[#232328]", item.color)}>
+                  <div className={cn("p-2 rounded-lg bg-page border border-default", item.color)}>
                     {item.icon}
                   </div>
                   {isConnected ? (
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-tighter">
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-success/10 text-success text-[10px] font-bold uppercase tracking-tighter">
                       <Check size={10} />
                       Connected
                     </div>
                   ) : (
                     <Popover.Root>
                       <Popover.Trigger asChild>
-                        <button className="px-3 py-1 rounded-lg bg-violet-500 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-violet-400 transition-colors shadow-lg shadow-violet-500/20">
+                        <button className="px-3 py-1 rounded-lg bg-accent text-white text-[10px] font-bold uppercase tracking-wider hover:bg-accent-hover transition-colors shadow-lg shadow-accent/20">
                           Connect
                         </button>
                       </Popover.Trigger>
                       <Popover.Portal>
                         <Popover.Content 
-                          className="w-72 bg-[#1c1c20] border border-[#232328] rounded-xl p-4 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200"
+                          className="w-72 bg-elevated border border-default rounded-xl p-4 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200"
                           sideOffset={8}
                         >
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
-                              <Settings size={14} className="text-violet-400" />
-                              <span className="text-xs font-bold text-[#e8e8ed]">Configure {item.name}</span>
+                              <Settings size={14} className="text-accent" />
+                              <span className="text-xs font-bold text-primary">Configure {item.name}</span>
                             </div>
-                            <Popover.Close className="p-1 text-[#6b6b7a] hover:text-[#e8e8ed] rounded transition-colors">
+                            <Popover.Close className="p-1 text-secondary hover:text-primary rounded transition-colors">
                               <X size={14} />
                             </Popover.Close>
                           </div>
 
                           <div className="space-y-4">
                             <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-[#6b6b7a] uppercase tracking-wider">API Key</label>
+                              <label className="text-[10px] font-bold text-secondary uppercase tracking-wider">API Key</label>
                               <div className="relative">
-                                <Key size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#44444d]" />
+                                <Key size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-tertiary" />
                                 <input 
                                   type="password" 
                                   placeholder="sk_test_..."
-                                  className="w-full bg-[#0a0a0c] border border-[#232328] rounded-lg pl-8 pr-3 py-1.5 text-xs text-[#e8e8ed] outline-none focus:border-violet-500/50"
+                                  className="w-full bg-page border border-default rounded-lg pl-8 pr-3 py-1.5 text-xs text-primary outline-none focus:border-accent/50"
                                 />
                               </div>
                             </div>
                             <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-[#6b6b7a] uppercase tracking-wider">Project ID</label>
+                              <label className="text-[10px] font-bold text-secondary uppercase tracking-wider">Project ID</label>
                               <input 
                                 type="text" 
                                 placeholder="my-awesome-project"
-                                className="w-full bg-[#0a0a0c] border border-[#232328] rounded-lg px-3 py-1.5 text-xs text-[#e8e8ed] outline-none focus:border-violet-500/50"
+                                className="w-full bg-page border border-default rounded-lg px-3 py-1.5 text-xs text-primary outline-none focus:border-accent/50"
                               />
                             </div>
                             <div className="flex gap-2 pt-2">
-                              <button className="flex-1 px-3 py-1.5 rounded-lg border border-[#232328] text-[#e8e8ed] text-[10px] font-bold uppercase tracking-wider hover:bg-[#232328] transition-colors">
+                              <button className="flex-1 px-3 py-1.5 rounded-lg border border-default text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-elevated transition-colors">
                                 Test
                               </button>
                               <button 
                                 onClick={() => handleConnect(item.id)}
                                 disabled={connecting}
-                                className="flex-1 px-3 py-1.5 rounded-lg bg-violet-500 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-violet-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="flex-1 px-3 py-1.5 rounded-lg bg-accent text-white text-[10px] font-bold uppercase tracking-wider hover:bg-accent-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                               >
                                 {connecting ? <Zap size={12} className="animate-pulse" /> : 'Save'}
                               </button>
                             </div>
                           </div>
-                          <Popover.Arrow className="fill-[#232328]" />
+                          <Popover.Arrow className="fill-default" />
                         </Popover.Content>
                       </Popover.Portal>
                     </Popover.Root>
@@ -172,15 +172,15 @@ export default function IntegrationsTab() {
                 </div>
 
                 <div className="relative z-10">
-                  <h3 className="text-sm font-bold text-[#e8e8ed] mb-1">{item.name}</h3>
-                  <p className="text-xs text-[#6b6b7a] leading-relaxed mb-4">{item.description}</p>
+                  <h3 className="text-sm font-bold text-primary mb-1">{item.name}</h3>
+                  <p className="text-xs text-secondary leading-relaxed mb-4">{item.description}</p>
                   
-                  <div className="flex items-center justify-between pt-4 border-t border-[#232328]">
-                    <div className="flex items-center gap-1 text-[10px] text-[#44444d]">
+                  <div className="flex items-center justify-between pt-4 border-t border-default">
+                    <div className="flex items-center gap-1 text-[10px] text-tertiary">
                       <ShieldCheck size={12} />
                       <span>Official</span>
                     </div>
-                    <a href="#" className="text-[10px] text-violet-400 hover:text-violet-300 flex items-center gap-1 font-medium">
+                    <a href="#" className="text-[10px] text-accent hover:text-accent-hover flex items-center gap-1 font-medium">
                       Docs
                       <ExternalLink size={10} />
                     </a>

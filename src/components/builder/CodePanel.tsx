@@ -29,7 +29,7 @@ import * as ContextMenu from '@radix-ui/react-context-menu';
 
 const FileIcon = ({ name, extension }: { name: string; extension?: string }) => {
   switch (extension) {
-    case 'tsx': return <FileCode size={14} className="text-violet-400" />;
+    case 'tsx': return <FileCode size={14} className="text-accent-hover" />;
     case 'ts': return <FileCode size={14} className="text-blue-400" />;
     case 'css': return <FileType size={14} className="text-amber-400" />;
     case 'json': return <FileJson size={14} className="text-gray-400" />;
@@ -77,13 +77,13 @@ const FileTreeItem = ({ node, level, onSelect }: { node: FileNode; level: number
           <ContextMenu.Trigger>
             <Collapsible.Trigger asChild>
               <div 
-                className="flex items-center gap-1.5 py-1 px-2 hover:bg-[#1c1c20] cursor-pointer group select-none"
+                className="flex items-center gap-1.5 py-1 px-2 hover:bg-elevated cursor-pointer group select-none"
                 style={{ paddingLeft: `${level * 12 + 8}px` }}
               >
                 <div className="text-zinc-500 group-hover:text-zinc-300 transition-colors">
                   {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                 </div>
-                <div className="text-violet-400/80">
+                <div className="text-accent-hover/80">
                   {isOpen ? <FolderOpen size={14} /> : <Folder size={14} />}
                 </div>
                 <span className="text-xs text-zinc-300 font-medium">{node.name}</span>
@@ -91,26 +91,26 @@ const FileTreeItem = ({ node, level, onSelect }: { node: FileNode; level: number
             </Collapsible.Trigger>
           </ContextMenu.Trigger>
           <ContextMenu.Portal>
-            <ContextMenu.Content className="bg-[#1c1c20] border border-[#2a2a30] rounded-md p-1 shadow-xl min-w-[160px] z-[100]">
+            <ContextMenu.Content className="bg-elevated border border-default rounded-md p-1 shadow-xl min-w-[160px] z-[100]">
               <ContextMenu.Item 
                 onClick={handleCreateFile}
-                className="text-xs text-zinc-300 px-2 py-1.5 outline-none cursor-pointer hover:bg-violet-500/20 hover:text-violet-400 rounded-sm flex items-center gap-2"
+                className="text-xs text-zinc-300 px-2 py-1.5 outline-none cursor-pointer hover:bg-accent/20 hover:text-accent-hover rounded-sm flex items-center gap-2"
               >
                 <Plus size={12} /> New File
               </ContextMenu.Item>
               <ContextMenu.Item 
                 onClick={handleCreateFolder}
-                className="text-xs text-zinc-300 px-2 py-1.5 outline-none cursor-pointer hover:bg-violet-500/20 hover:text-violet-400 rounded-sm flex items-center gap-2"
+                className="text-xs text-zinc-300 px-2 py-1.5 outline-none cursor-pointer hover:bg-accent/20 hover:text-accent-hover rounded-sm flex items-center gap-2"
               >
                 <Folder size={12} /> New Folder
               </ContextMenu.Item>
               <ContextMenu.Item 
                 onClick={handleRename}
-                className="text-xs text-zinc-300 px-2 py-1.5 outline-none cursor-pointer hover:bg-violet-500/20 hover:text-violet-400 rounded-sm flex items-center gap-2"
+                className="text-xs text-zinc-300 px-2 py-1.5 outline-none cursor-pointer hover:bg-accent/20 hover:text-accent-hover rounded-sm flex items-center gap-2"
               >
                 <Edit2 size={12} /> Rename
               </ContextMenu.Item>
-              <ContextMenu.Separator className="h-[1px] bg-[#2a2a30] my-1" />
+              <ContextMenu.Separator className="h-[1px] bg-default my-1" />
               <ContextMenu.Item 
                 onClick={handleDelete}
                 className="text-xs text-zinc-300 px-2 py-1.5 outline-none cursor-pointer hover:bg-red-500/20 hover:text-red-400 rounded-sm flex items-center gap-2"
@@ -136,8 +136,8 @@ const FileTreeItem = ({ node, level, onSelect }: { node: FileNode; level: number
         <div 
           onClick={() => onSelect(node.id)}
           className={cn(
-            "flex items-center gap-2 py-1 px-2 hover:bg-[#1c1c20] cursor-pointer group select-none border-l-2 transition-all",
-            isSelected ? "bg-[#1c1c20] border-violet-500" : "border-transparent"
+            "flex items-center gap-2 py-1 px-2 hover:bg-elevated cursor-pointer group select-none border-l-2 transition-all",
+            isSelected ? "bg-elevated border-accent" : "border-transparent"
           )}
           style={{ paddingLeft: `${level * 12 + 20}px` }}
         >
@@ -148,16 +148,16 @@ const FileTreeItem = ({ node, level, onSelect }: { node: FileNode; level: number
         </div>
       </ContextMenu.Trigger>
       <ContextMenu.Portal>
-        <ContextMenu.Content className="bg-[#1c1c20] border border-[#2a2a30] rounded-md p-1 shadow-xl min-w-[160px] z-[100]">
+        <ContextMenu.Content className="bg-elevated border border-default rounded-md p-1 shadow-xl min-w-[160px] z-[100]">
           <ContextMenu.Item 
             onClick={handleRename}
-            className="text-xs text-zinc-300 px-2 py-1.5 outline-none cursor-pointer hover:bg-violet-500/20 hover:text-violet-400 rounded-sm flex items-center gap-2"
+            className="text-xs text-zinc-300 px-2 py-1.5 outline-none cursor-pointer hover:bg-accent/20 hover:text-accent-hover rounded-sm flex items-center gap-2"
           >
             <Edit2 size={12} /> Rename
           </ContextMenu.Item>
           <ContextMenu.Item 
             onClick={handleDuplicate}
-            className="text-xs text-zinc-300 px-2 py-1.5 outline-none cursor-pointer hover:bg-violet-500/20 hover:text-violet-400 rounded-sm flex items-center gap-2"
+            className="text-xs text-zinc-300 px-2 py-1.5 outline-none cursor-pointer hover:bg-accent/20 hover:text-accent-hover rounded-sm flex items-center gap-2"
           >
             <Copy size={12} /> Duplicate
           </ContextMenu.Item>
@@ -166,11 +166,11 @@ const FileTreeItem = ({ node, level, onSelect }: { node: FileNode; level: number
               navigator.clipboard.writeText(node.name);
               // In a real app we'd compute full path
             }}
-            className="text-xs text-zinc-300 px-2 py-1.5 outline-none cursor-pointer hover:bg-violet-500/20 hover:text-violet-400 rounded-sm flex items-center gap-2"
+            className="text-xs text-zinc-300 px-2 py-1.5 outline-none cursor-pointer hover:bg-accent/20 hover:text-accent-hover rounded-sm flex items-center gap-2"
           >
             <Search size={12} /> Copy Path
           </ContextMenu.Item>
-          <ContextMenu.Separator className="h-[1px] bg-[#2a2a30] my-1" />
+          <ContextMenu.Separator className="h-[1px] bg-default my-1" />
           <ContextMenu.Item 
             onClick={handleDelete}
             className="text-xs text-zinc-300 px-2 py-1.5 outline-none cursor-pointer hover:bg-red-500/20 hover:text-red-400 rounded-sm flex items-center gap-2"
@@ -219,13 +219,13 @@ export const CodePanel: React.FC = () => {
         { token: 'number', foreground: 'f59e0b' },
       ],
       colors: {
-        'editor.background': '#0a0a0c',
-        'editor.foreground': '#e8e8ed',
-        'editor.lineHighlightBackground': '#1c1c20',
-        'editorCursor.foreground': '#7c6ff7',
-        'editorIndentGuide.background': '#232328',
-        'editorLineNumber.foreground': '#44444d',
-        'editor.selectionBackground': '#7c6ff733',
+        'editor.background': '#1C1C1E',
+        'editor.foreground': '#F0F0F2',
+        'editor.lineHighlightBackground': '#2B2B2E',
+        'editorCursor.foreground': '#7B6AEE',
+        'editorIndentGuide.background': '#232326',
+        'editorLineNumber.foreground': '#5A5A5E',
+        'editor.selectionBackground': '#7B6AEE33',
       }
     });
     monaco.editor.setTheme('tesseract-dark');
@@ -300,12 +300,12 @@ export const CodePanel: React.FC = () => {
   if (!isCodeOpen) return null;
 
   return (
-    <div className="flex flex-1 h-full bg-[#0a0a0c] border-x border-[#232328] overflow-hidden animate-in slide-in-from-right-full duration-200">
+    <div className="flex flex-1 h-full bg-page border-x border-subtle overflow-hidden animate-in slide-in-from-right-full duration-200">
       
       {/* File Tree Sidebar */}
       {isSidebarOpen && (
-        <div className="w-48 border-r border-[#232328] flex flex-col bg-[#0d0d0f]">
-          <div className="h-9 flex items-center px-3 border-b border-[#232328] justify-between">
+        <div className="w-48 border-r border-subtle flex flex-col bg-inset">
+          <div className="h-9 flex items-center px-3 border-b border-subtle justify-between">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Explorer</span>
             <button onClick={() => toggleSidebar()} className="text-zinc-500 hover:text-zinc-300">
               <PanelLeftClose size={14} />
@@ -323,9 +323,9 @@ export const CodePanel: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0">
         
         {/* Tab Bar */}
-        <div className="h-9 bg-[#141416] flex items-center overflow-x-auto no-scrollbar border-b border-[#232328]">
+        <div className="h-9 bg-surface flex items-center overflow-x-auto no-scrollbar border-b border-subtle">
           {!isSidebarOpen && (
-            <button onClick={() => toggleSidebar()} className="px-3 text-zinc-500 hover:text-zinc-300 border-r border-[#232328] h-full">
+            <button onClick={() => toggleSidebar()} className="px-3 text-zinc-500 hover:text-zinc-300 border-r border-subtle h-full">
               <PanelLeftOpen size={14} />
             </button>
           )}
@@ -340,14 +340,14 @@ export const CodePanel: React.FC = () => {
                 key={id}
                 onClick={() => setActiveFile(id)}
                 className={cn(
-                  "flex items-center gap-2 px-3 h-full text-xs cursor-pointer border-r border-[#232328] transition-colors min-w-[120px] max-w-[200px]",
-                  isActive ? "bg-[#0a0a0c] text-[#e8e8ed]" : "text-[#6b6b7a] hover:bg-[#1c1c20]"
+                  "flex items-center gap-2 px-3 h-full text-xs cursor-pointer border-r border-subtle transition-colors min-w-[120px] max-w-[200px]",
+                  isActive ? "bg-page text-primary" : "text-secondary hover:bg-elevated"
                 )}
               >
                 <FileIcon name={file.name} extension={file.extension} />
                 <span className="truncate flex-1">{file.name}</span>
                 {isUnsaved ? (
-                  <div className="w-2 h-2 rounded-full bg-violet-500" />
+                  <div className="w-2 h-2 rounded-full bg-accent" />
                 ) : (
                   <button 
                     onClick={(e) => { e.stopPropagation(); closeFile(id); }}
@@ -362,7 +362,7 @@ export const CodePanel: React.FC = () => {
         </div>
 
         {/* Breadcrumb */}
-        <div className="h-6 px-3 flex items-center gap-1 text-[10px] text-[#44444d] bg-[#0a0a0c] border-b border-[#232328]">
+        <div className="h-6 px-3 flex items-center gap-1 text-[10px] text-tertiary bg-page border-b border-subtle">
           {activeFileId && getBreadcrumbs(activeFileId).map((part, i, arr) => (
             <React.Fragment key={i}>
               <span className="hover:text-zinc-400 cursor-pointer">{part}</span>
@@ -372,7 +372,7 @@ export const CodePanel: React.FC = () => {
         </div>
 
         {/* Editor */}
-        <div className="flex-1 bg-[#0a0a0c]">
+        <div className="flex-1 bg-page">
           {activeFile ? (
             <Editor
               height="100%"
@@ -405,7 +405,7 @@ export const CodePanel: React.FC = () => {
         </div>
 
         {/* Bottom Status */}
-        <div className="h-6 bg-[#0a0a0c] border-t border-[#232328] px-3 flex items-center justify-between text-[10px] text-[#44444d]">
+        <div className="h-6 bg-page border-t border-subtle px-3 flex items-center justify-between text-[10px] text-tertiary">
           <div className="flex items-center gap-4">
             <span>Ln 1, Col 1</span>
             <span className="uppercase">{activeFile?.extension || 'Plain Text'}</span>

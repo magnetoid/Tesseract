@@ -1,0 +1,202 @@
+import React from 'react';
+import { 
+  Building2, 
+  Users, 
+  CreditCard, 
+  Activity, 
+  TrendingUp, 
+  ArrowUpRight, 
+  ArrowDownRight,
+  Zap,
+  Cpu,
+  ShieldCheck,
+  AlertCircle
+} from 'lucide-react';
+import { 
+  LineChart, 
+  Line, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  Cell
+} from 'recharts';
+import { cn } from '../../../lib/utils';
+
+const REVENUE_DATA = [
+  { date: 'Jan 1', mrr: 8500, subs: 12 },
+  { date: 'Jan 15', mrr: 9200, subs: 18 },
+  { date: 'Feb 1', mrr: 10100, subs: 24 },
+  { date: 'Feb 15', mrr: 11500, subs: 32 },
+  { date: 'Mar 1', mrr: 12450, subs: 45 },
+];
+
+const RECENT_ACTIVITY = [
+  { id: 1, user: 'Marko', action: 'upgraded to Pro', workspace: 'Marko Workspace', time: '2 mins ago', avatar: 'https://picsum.photos/seed/marko/200' },
+  { id: 2, user: 'Jane Doe', action: 'created workspace', workspace: 'Irving Studio', time: '15 mins ago', avatar: 'https://picsum.photos/seed/jane/200' },
+  { id: 3, user: 'Bob Smith', action: 'deployed project', workspace: 'Project Alpha', time: '45 mins ago', avatar: 'https://picsum.photos/seed/bob/200' },
+  { id: 4, user: 'Alice', action: 'invited member', workspace: 'Torsor Team', time: '1 hour ago', avatar: 'https://picsum.photos/seed/alice/200' },
+  { id: 5, user: 'Charlie', action: 'added secret', workspace: 'Dev Ops', time: '3 hours ago', avatar: 'https://picsum.photos/seed/charlie/200' },
+];
+
+export function AdminOverviewTab() {
+  return (
+    <div className="space-y-8">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Workspaces', value: '1,247', change: '+12%', icon: Building2, color: 'text-accent', bg: 'bg-accent/10' },
+          { label: 'Total Users', value: '3,891', change: '+8%', icon: Users, color: 'text-info', bg: 'bg-info/10' },
+          { label: 'MRR', value: '$12,450', change: '+15%', icon: CreditCard, color: 'text-success', bg: 'bg-success/10' },
+          { label: 'Active Projects', value: '4,210', change: '+22%', icon: Activity, color: 'text-warning', bg: 'bg-warning/10' },
+        ].map((stat, i) => (
+          <div key={i} className="bg-surface border border-default rounded-2xl p-6 space-y-4 shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-center justify-between">
+              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", stat.bg, stat.color)}>
+                <stat.icon size={20} />
+              </div>
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/10 text-success text-[10px] font-bold uppercase tracking-wider">
+                <ArrowUpRight size={10} />
+                {stat.change}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs font-bold text-tertiary uppercase tracking-wider">{stat.label}</div>
+              <div className="text-2xl font-bold text-primary mt-1">{stat.value}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Revenue Chart */}
+        <div className="lg:col-span-2 bg-surface border border-default rounded-3xl p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="text-accent" size={18} />
+              <h3 className="text-sm font-bold uppercase tracking-wider">Revenue Growth (90 Days)</h3>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-accent" />
+                <span className="text-xs text-secondary">MRR</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-accent/30" />
+                <span className="text-xs text-secondary">New Subs</span>
+              </div>
+            </div>
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={REVENUE_DATA}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#3E3E42" vertical={false} />
+                <XAxis 
+                  dataKey="date" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 10, fill: '#8E8E93' }}
+                  dy={10}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 10, fill: '#8E8E93' }}
+                  dx={-10}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#2B2B2E', border: '1px solid #3E3E42', borderRadius: '12px', fontSize: '12px' }}
+                  itemStyle={{ color: '#F0F0F2' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="mrr" 
+                  stroke="#7B6AEE" 
+                  strokeWidth={3} 
+                  dot={{ r: 4, fill: '#7B6AEE', strokeWidth: 2, stroke: '#2B2B2E' }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="bg-surface border border-default rounded-3xl p-6 space-y-6">
+          <div className="flex items-center gap-2">
+            <History className="text-accent" size={18} />
+            <h3 className="text-sm font-bold uppercase tracking-wider">Recent Activity</h3>
+          </div>
+          <div className="space-y-4">
+            {RECENT_ACTIVITY.map((activity) => (
+              <div key={activity.id} className="flex items-start gap-3 group">
+                <div className="w-8 h-8 rounded-full bg-elevated border border-default overflow-hidden flex-shrink-0">
+                  <img src={activity.avatar} alt={activity.user} className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs text-primary leading-relaxed">
+                    <span className="font-bold">{activity.user}</span> {activity.action} in <span className="text-accent font-medium">{activity.workspace}</span>
+                  </div>
+                  <div className="text-[10px] text-tertiary mt-0.5">{activity.time}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button className="w-full py-2 text-xs font-bold text-accent hover:text-accent-hover transition-colors uppercase tracking-wider border-t border-default pt-4">
+            View All Activity
+          </button>
+        </div>
+      </div>
+
+      {/* Platform Health */}
+      <div className="bg-surface border border-default rounded-3xl p-6 space-y-6">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="text-success" size={18} />
+          <h3 className="text-sm font-bold uppercase tracking-wider">Platform Health</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="space-y-2">
+            <div className="text-[10px] font-bold text-tertiary uppercase tracking-wider">API Latency</div>
+            <div className="flex items-center gap-2">
+              <div className="text-xl font-bold text-primary">42ms avg</div>
+              <div className="w-2 h-2 rounded-full bg-success shadow-[0_0_8px_rgba(52,199,89,0.5)]" />
+            </div>
+            <div className="text-[10px] text-success font-medium">Under 100ms threshold</div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-[10px] font-bold text-tertiary uppercase tracking-wider">Model Array Status</div>
+            <div className="flex flex-wrap gap-1.5">
+              {['Claude', 'GPT-4', 'Gemini', 'DeepSeek', 'Llama'].map((m) => (
+                <div key={m} className="w-2 h-2 rounded-full bg-success shadow-[0_0_8px_rgba(52,199,89,0.5)]" title={m} />
+              ))}
+            </div>
+            <div className="text-[10px] text-success font-medium">All systems operational</div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-[10px] font-bold text-tertiary uppercase tracking-wider">Active Sandboxes</div>
+            <div className="text-xl font-bold text-primary">23 running</div>
+            <div className="text-[10px] text-secondary font-medium">4 queued, 0 failed</div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-[10px] font-bold text-tertiary uppercase tracking-wider">Error Rate</div>
+            <div className="flex items-center gap-2">
+              <div className="text-xl font-bold text-primary">0.3%</div>
+              <div className="w-2 h-2 rounded-full bg-success shadow-[0_0_8px_rgba(52,199,89,0.5)]" />
+            </div>
+            <div className="text-[10px] text-success font-medium">Healthy (threshold 1%)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function History({ className, size }: { className?: string, size?: number }) {
+  return <Activity className={className} size={size} />;
+}

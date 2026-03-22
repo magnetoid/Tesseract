@@ -54,10 +54,10 @@ export function AppShell() {
 
   return (
     <ToastProvider>
-      <div className="flex flex-col h-screen bg-[#0a0a0c] text-[#e8e8ed] font-sans overflow-hidden">
+      <div className="flex flex-col h-screen bg-page text-primary font-sans overflow-hidden transition-colors duration-300">
         <TopBar />
         <div className="flex flex-1 min-h-0 overflow-hidden relative">
-          <Rail className={cn(isMobile && "fixed bottom-0 left-0 right-0 h-12 w-full flex-row z-50 bg-[#141416] border-t border-[#232328]")} />
+          <Rail className={cn(isMobile && "fixed bottom-0 left-0 right-0 h-12 w-full flex-row z-50 bg-surface border-t border-default")} />
           
           {/* Left Panel Overlay on Tablet */}
           {isTablet && leftPanelOpen && (

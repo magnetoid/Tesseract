@@ -25,7 +25,12 @@ import {
 import * as Select from '@radix-ui/react-select';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { EmptyState } from '../components/shared/EmptyState';
+import { ProjectCardSkeleton } from '../components/shared/Skeleton';
+import { Button } from '../components/shared/Button';
 import { useAuthStore } from '../stores/authStore';
+import { useActiveWorkspace } from '../stores/workspaceStore';
+import { ActivityFeed } from '../components/home/ActivityFeed';
 import { useAppStore } from '../useAppStore';
 import { useProjectStore, Project } from '../stores/projectStore';
 import { useSocialStore, Template } from '../stores/socialStore';
@@ -71,8 +76,16 @@ const TechIcon: React.FC<{ type: string }> = ({ type }) => {
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const activeWorkspace = useActiveWorkspace();
   const { isBillingModalOpen, setBillingModalOpen } = useAppStore();
   const { projects, deleteProject, duplicateProject, archiveProject } = useProjectStore();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate loading
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
   const { templates } = useSocialStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
@@ -135,7 +148,7 @@ export const DashboardPage: React.FC = () => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{user?.name}</p>
-              <p className="text-[10px] text-[#6b6b7a] truncate capitalize">{user?.plan} Plan</p>
+              <p className="text-[10px] text-[#6b6b7a] truncate capitalize">{activeWorkspace?.plan} Plan</p>
             </div>
           </div>
           <button 
@@ -164,19 +177,21 @@ export const DashboardPage: React.FC = () => {
                 className="w-72 bg-[#141416] border border-[#2a2a30] rounded-md pl-10 pr-4 py-1.5 text-sm focus:outline-none focus:border-violet-500/50 transition-colors"
               />
             </div>
-            <button 
+            <Button 
               onClick={() => {
-                if (user?.plan === 'free' && projects.length >= 3) {
+                if (activeWorkspace?.plan === 'free' && projects.length >= 3) {
                   alert('Upgrade to Pro for unlimited projects');
                   return;
                 }
                 navigate('/onboarding');
               }}
-              className="flex items-center gap-2 bg-violet-500 hover:bg-violet-400 text-white px-4 py-1.5 rounded-md text-sm font-bold transition-all shadow-lg shadow-violet-500/20"
+              variant="primary"
+              size="md"
+              className="flex items-center gap-2"
             >
               <Plus size={18} />
               New Project
-            </button>
+            </Button>
           </div>
         </header>
 
@@ -239,35 +254,39 @@ export const DashboardPage: React.FC = () => {
             </Tabs.Content>
 
             <Tabs.Content value={activeTab} className="outline-none">
-              {filteredProjects.length === 0 && activeTab !== 'all' ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <div className="w-16 h-16 bg-[#141416] border border-[#2a2a30] rounded-2xl flex items-center justify-center mb-4">
-                    <Box size={32} className="text-[#6b6b7a]" />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2">No projects found</h3>
-                  <p className="text-sm text-[#6b6b7a] mb-6">Try adjusting your search or filters.</p>
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <ProjectCardSkeleton />
+                  <ProjectCardSkeleton />
+                  <ProjectCardSkeleton />
+                </div>
+              ) : filteredProjects.length === 0 && activeTab !== 'all' ? (
+                <div className="py-20">
+                  <EmptyState 
+                    icon={Search}
+                    title="No projects found"
+                    description="Try adjusting your search or filters to find what you're looking for."
+                    actionLabel="Clear search"
+                    onAction={() => setSearchQuery('')}
+                  />
                 </div>
               ) : filteredProjects.length === 0 && activeTab === 'all' ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <div className="w-16 h-16 bg-[#141416] border border-[#2a2a30] rounded-2xl flex items-center justify-center mb-4">
-                    <Code2 size={32} className="text-[#6b6b7a]" />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2">No projects yet</h3>
-                  <p className="text-sm text-[#6b6b7a] mb-6">Create your first project to get started with Tesseract.</p>
-                  <button 
-                    onClick={() => navigate('/onboarding')}
-                    className="bg-violet-500 hover:bg-violet-400 text-white px-6 py-2 rounded-lg font-bold transition-all"
-                  >
-                    Create your first project
-                  </button>
+                <div className="py-20">
+                  <EmptyState 
+                    icon={LayoutGrid}
+                    title="No projects yet"
+                    description="Create your first project to start building with Torsor."
+                    actionLabel="Create project"
+                    onAction={() => navigate('/onboarding')}
+                  />
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {/* New Project Card */}
                   <div 
                     onClick={() => {
-                      if (user?.plan === 'free' && projects.length >= 3) {
-                        alert('Upgrade to Pro for unlimited projects');
+                      if (activeWorkspace?.plan === 'free' && projects.length >= 3) {
+                        setBillingModalOpen(true);
                         return;
                       }
                       navigate('/onboarding');
@@ -278,7 +297,7 @@ export const DashboardPage: React.FC = () => {
                       <Plus size={24} />
                     </div>
                     <span className="text-sm font-bold text-[#6b6b7a] group-hover:text-[#e8e8ed]">
-                      {user?.plan === 'free' && projects.length >= 3 ? 'Upgrade to Pro for unlimited projects' : 'Create new project'}
+                      {activeWorkspace?.plan === 'free' && projects.length >= 3 ? 'Upgrade to Pro for unlimited projects' : 'Create new project'}
                     </span>
                   </div>
 
@@ -392,6 +411,11 @@ export const DashboardPage: React.FC = () => {
               )}
             </Tabs.Content>
           </Tabs.Root>
+
+          {/* Activity Feed */}
+          <div className="mt-12 max-w-5xl mx-auto">
+            <ActivityFeed />
+          </div>
         </div>
         <BillingModal 
           open={isBillingModalOpen} 

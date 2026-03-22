@@ -26,18 +26,18 @@ export default function TerminalTab() {
       fontSize: 12,
       fontFamily: 'JetBrains Mono, monospace',
       theme: {
-        background: '#0a0a0c',
-        foreground: '#e8e8ed',
-        cursor: '#7c6ff7',
-        selectionBackground: '#7c6ff740',
-        black: '#141416',
-        red: '#ef4444',
-        green: '#10b981',
-        yellow: '#f59e0b',
-        blue: '#3b82f6',
-        magenta: '#7c6ff7',
-        cyan: '#06b6d4',
-        white: '#e8e8ed',
+        background: '#1C1C1E', // --bg-page
+        foreground: '#F0F0F2', // --text-primary
+        cursor: '#7B6AEE',     // --accent
+        selectionBackground: 'rgba(123, 106, 238, 0.25)', // --accent-muted (adjusted for selection)
+        black: '#2B2B2E',      // --bg-surface
+        red: '#FF453A',        // --error
+        green: '#34C759',      // --success
+        yellow: '#FF9F0A',     // --warning
+        blue: '#5AC8FA',       // --info
+        magenta: '#7B6AEE',    // --accent
+        cyan: '#5AC8FA',       // --info
+        white: '#F0F0F2',      // --text-primary
       },
       allowTransparency: true,
     });
@@ -47,9 +47,9 @@ export default function TerminalTab() {
     term.open(container);
     fitAddon.fit();
 
-    term.writeln('\x1b[1;35mTesseract Terminal v1.0.0\x1b[0m');
+    term.writeln('\x1b[1;35mTorsor Terminal v1.0.0\x1b[0m');
     term.writeln('Type \x1b[1;32mhelp\x1b[0m to see available commands.\r\n');
-    term.write('\x1b[1;34muser@tesseract\x1b[0m:\x1b[1;32m~/project\x1b[0m$ ');
+    term.write('\x1b[1;34muser@torsor\x1b[0m:\x1b[1;32m~/project\x1b[0m$ ');
 
     let currentLine = '';
 
@@ -59,7 +59,7 @@ export default function TerminalTab() {
         term.write('\r\n');
         handleCommand(currentLine, term);
         currentLine = '';
-        term.write('\x1b[1;34muser@tesseract\x1b[0m:\x1b[1;32m~/project\x1b[0m$ ');
+        term.write('\x1b[1;34muser@torsor\x1b[0m:\x1b[1;32m~/project\x1b[0m$ ');
       } else if (code === 127) { // Backspace
         if (currentLine.length > 0) {
           currentLine = currentLine.slice(0, -1);
@@ -109,7 +109,7 @@ export default function TerminalTab() {
         break;
       case 'npm':
         if (args[0] === 'run' && args[1] === 'dev') {
-          term.writeln('\r\n\x1b[1;32m> tesseract-app@0.1.0 dev\x1b[0m');
+          term.writeln('\r\n\x1b[1;32m> torsor-app@0.1.0 dev\x1b[0m');
           term.writeln('\x1b[1;32m> vite\x1b[0m\r\n');
           term.writeln('  \x1b[1;35mVITE v6.0.0\x1b[0m  ready in \x1b[1;33m124 ms\x1b[0m\r\n');
           term.writeln('  \x1b[1;32m➜\x1b[0m  \x1b[1;37mLocal:\x1b[0m   \x1b[1;34mhttp://localhost:3000/\x1b[0m');
@@ -124,7 +124,7 @@ export default function TerminalTab() {
             if (progress >= 100) {
               clearInterval(interval);
               term.writeln('\r\n\x1b[1;32madded 42 packages in 2s\x1b[0m');
-              term.write('\x1b[1;34muser@tesseract\x1b[0m:\x1b[1;32m~/project\x1b[0m$ ');
+              term.write('\x1b[1;34muser@torsor\x1b[0m:\x1b[1;32m~/project\x1b[0m$ ');
             }
           }, 200);
         } else {
@@ -180,24 +180,24 @@ export default function TerminalTab() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#0a0a0c] overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-page overflow-hidden">
       {/* SUB-TAB BAR */}
-      <div className="h-8 bg-[#141416] flex items-center overflow-x-auto no-scrollbar shrink-0 border-b border-[#232328]">
+      <div className="h-8 bg-surface flex items-center overflow-x-auto no-scrollbar shrink-0 border-b border-default">
         {instances.map((inst) => (
           <div 
             key={inst.id}
             onClick={() => setActiveId(inst.id)}
             className={cn(
-              "h-full flex items-center gap-2 px-3 border-r border-[#232328] min-w-[120px] max-w-[200px] cursor-pointer group transition-colors shrink-0",
-              activeId === inst.id ? "bg-[#0a0a0c] text-[#e8e8ed]" : "text-[#6b6b7a] hover:bg-[#1c1c20]"
+              "h-full flex items-center gap-2 px-3 border-r border-default min-w-[120px] max-w-[200px] cursor-pointer group transition-colors shrink-0",
+              activeId === inst.id ? "bg-page text-primary" : "text-tertiary hover:bg-elevated"
             )}
           >
-            <TerminalIcon size={12} className={activeId === inst.id ? "text-violet-400" : "text-[#44444d]"} />
+            <TerminalIcon size={12} className={activeId === inst.id ? "text-accent" : "text-tertiary"} />
             <span className="text-xs truncate flex-1">{inst.name}</span>
             {instances.length > 1 && (
               <button 
                 onClick={(e) => removeInstance(inst.id, e)}
-                className="p-0.5 rounded hover:bg-[#232328] opacity-0 group-hover:opacity-100 transition-opacity"
+                className="p-0.5 rounded hover:bg-default/50 opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <X size={12} />
               </button>
@@ -206,7 +206,7 @@ export default function TerminalTab() {
         ))}
         <button 
           onClick={addInstance}
-          className="p-2 text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#1c1c20] transition-colors"
+          className="p-2 text-tertiary hover:text-primary hover:bg-elevated transition-colors"
         >
           <Plus size={14} />
         </button>

@@ -27,6 +27,7 @@ interface EditorState {
   toggleCode: (force?: boolean) => void;
   toggleSidebar: (force?: boolean) => void;
   setUnsaved: (id: string, unsaved: boolean) => void;
+  reset: () => void;
 }
 
 export const useEditorStore = create<EditorState>()(
@@ -39,6 +40,14 @@ export const useEditorStore = create<EditorState>()(
       isCodeOpen: true,
       isSidebarOpen: true,
       unsavedChanges: [],
+
+      reset: () => set({
+        openFileIds: [],
+        activeFileId: null,
+        searchResults: [],
+        searchQuery: '',
+        unsavedChanges: [],
+      }),
 
       openFile: (id) => {
         const { openFileIds } = get();

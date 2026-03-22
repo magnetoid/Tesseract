@@ -80,16 +80,16 @@ export default function AgentSkillsTab() {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#0a0a0c] overflow-y-auto no-scrollbar">
+    <div className="flex-1 flex flex-col bg-page overflow-y-auto no-scrollbar">
       {/* HEADER */}
-      <div className="h-12 bg-[#141416] flex items-center justify-between px-4 shrink-0 border-b border-[#232328] sticky top-0 z-20">
+      <div className="h-12 bg-surface flex items-center justify-between px-4 shrink-0 border-b border-default sticky top-0 z-20">
         <div className="flex items-center gap-2">
-          <Sparkles size={18} className="text-violet-400" />
-          <h2 className="text-sm font-bold text-[#e8e8ed]">Agent Skills</h2>
+          <Sparkles size={18} className="text-accent" />
+          <h2 className="text-sm font-bold text-primary">Agent Skills</h2>
         </div>
         <button 
           onClick={() => setIsAddingSkill(true)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-500 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-violet-400 transition-colors shadow-lg shadow-violet-500/20"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent text-white text-[10px] font-bold uppercase tracking-wider hover:bg-accent-hover transition-colors shadow-lg shadow-accent/20"
         >
           <Plus size={14} />
           Add Skill
@@ -99,26 +99,26 @@ export default function AgentSkillsTab() {
       <div className="flex-1 p-6 max-w-4xl mx-auto w-full space-y-8">
         {/* DEFAULT SKILLS */}
         <section>
-          <h3 className="text-xs font-bold text-[#6b6b7a] uppercase tracking-widest mb-4">Core Capabilities</h3>
+          <h3 className="text-xs font-bold text-secondary uppercase tracking-widest mb-4">Core Capabilities</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {skills.map((skill) => (
               <div 
                 key={skill.id}
                 className={cn(
-                  "bg-[#141416] rounded-xl border border-[#232328] p-4 flex items-center justify-between transition-all",
+                  "bg-surface rounded-xl border border-default p-4 flex items-center justify-between transition-all",
                   !skill.enabled && "opacity-50 grayscale"
                 )}
               >
                 <div className="flex items-center gap-4">
                   <div className={cn(
-                    "p-2 rounded-lg bg-[#0a0a0c] border border-[#232328]",
-                    skill.enabled ? "text-violet-400" : "text-[#44444d]"
+                    "p-2 rounded-lg bg-page border border-default",
+                    skill.enabled ? "text-accent" : "text-tertiary"
                   )}>
                     {skill.icon}
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-[#e8e8ed] mb-0.5">{skill.name}</h4>
-                    <p className="text-[11px] text-[#6b6b7a] leading-tight">{skill.description}</p>
+                    <h4 className="text-sm font-bold text-primary mb-0.5">{skill.name}</h4>
+                    <p className="text-[11px] text-secondary leading-tight">{skill.description}</p>
                   </div>
                 </div>
                 <Switch.Root 
@@ -127,7 +127,7 @@ export default function AgentSkillsTab() {
                   disabled={!skill.canDisable}
                   className={cn(
                     "w-8 h-4 rounded-full relative transition-colors outline-none cursor-pointer disabled:cursor-not-allowed",
-                    skill.enabled ? "bg-violet-500" : "bg-[#232328]"
+                    skill.enabled ? "bg-accent" : "bg-elevated"
                   )}
                 >
                   <Switch.Thumb className="block w-3 h-3 bg-white rounded-full transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[18px]" />
@@ -139,81 +139,81 @@ export default function AgentSkillsTab() {
 
         {/* CUSTOM SKILLS */}
         <section>
-          <h3 className="text-xs font-bold text-[#6b6b7a] uppercase tracking-widest mb-4">Custom Instructions</h3>
+          <h3 className="text-xs font-bold text-secondary uppercase tracking-widest mb-4">Custom Instructions</h3>
           <div className="space-y-3">
             {customSkills.map((skill) => (
               <div 
                 key={skill.id}
-                className="bg-[#141416] rounded-xl border border-[#232328] p-4 group"
+                className="bg-surface rounded-xl border border-default p-4 group"
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <Zap size={14} className="text-amber-500" />
-                    <h4 className="text-sm font-bold text-[#e8e8ed]">{skill.name}</h4>
+                    <Zap size={14} className="text-warning" />
+                    <h4 className="text-sm font-bold text-primary">{skill.name}</h4>
                   </div>
                   <button 
                     onClick={() => removeCustomSkill(skill.id)}
-                    className="p-1 text-[#44444d] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                    className="p-1 text-tertiary hover:text-error transition-colors opacity-0 group-hover:opacity-100"
                   >
                     <Trash2 size={14} />
                   </button>
                 </div>
-                <p className="text-xs text-[#6b6b7a] mb-3">{skill.description}</p>
-                <div className="bg-[#0a0a0c] rounded-lg p-3 border border-[#232328] font-mono text-[11px] text-violet-400/80 italic">
+                <p className="text-xs text-secondary mb-3">{skill.description}</p>
+                <div className="bg-page rounded-lg p-3 border border-default font-mono text-[11px] text-accent/80 italic">
                   "{skill.instruction}"
                 </div>
               </div>
             ))}
 
             {isAddingSkill ? (
-              <div className="bg-[#141416] rounded-xl border border-violet-500/30 p-5 space-y-4 animate-in zoom-in-95 duration-200">
+              <div className="bg-surface rounded-xl border border-accent/30 p-5 space-y-4 animate-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-violet-400 uppercase tracking-widest">New Custom Skill</h4>
-                  <button onClick={() => setIsAddingSkill(false)} className="text-[#6b6b7a] hover:text-[#e8e8ed]">
+                  <h4 className="text-xs font-bold text-accent uppercase tracking-widest">New Custom Skill</h4>
+                  <button onClick={() => setIsAddingSkill(false)} className="text-secondary hover:text-primary">
                     <Plus size={16} className="rotate-45" />
                   </button>
                 </div>
                 <div className="space-y-3">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-[#6b6b7a] uppercase tracking-wider">Skill Name</label>
+                    <label className="text-[10px] font-bold text-secondary uppercase tracking-wider">Skill Name</label>
                     <input 
                       type="text" 
                       placeholder="e.g. Zod Validation"
                       value={newSkill.name}
                       onChange={(e) => setNewSkill(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full bg-[#0a0a0c] border border-[#232328] rounded-lg px-3 py-1.5 text-xs text-[#e8e8ed] outline-none focus:border-violet-500/50"
+                      className="w-full bg-page border border-default rounded-lg px-3 py-1.5 text-xs text-primary outline-none focus:border-accent/50"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-[#6b6b7a] uppercase tracking-wider">Description</label>
+                    <label className="text-[10px] font-bold text-secondary uppercase tracking-wider">Description</label>
                     <input 
                       type="text" 
                       placeholder="What does this skill do?"
                       value={newSkill.description}
                       onChange={(e) => setNewSkill(prev => ({ ...prev, description: e.target.value }))}
-                      className="w-full bg-[#0a0a0c] border border-[#232328] rounded-lg px-3 py-1.5 text-xs text-[#e8e8ed] outline-none focus:border-violet-500/50"
+                      className="w-full bg-page border border-default rounded-lg px-3 py-1.5 text-xs text-primary outline-none focus:border-accent/50"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-[#6b6b7a] uppercase tracking-wider">Instruction (System Prompt Addition)</label>
+                    <label className="text-[10px] font-bold text-secondary uppercase tracking-wider">Instruction (System Prompt Addition)</label>
                     <textarea 
                       placeholder="When building forms, always use Zod for validation..."
                       value={newSkill.instruction}
                       onChange={(e) => setNewSkill(prev => ({ ...prev, instruction: e.target.value }))}
-                      className="w-full bg-[#0a0a0c] border border-[#232328] rounded-lg px-3 py-2 text-xs text-[#e8e8ed] outline-none focus:border-violet-500/50 min-h-[80px] resize-none"
+                      className="w-full bg-page border border-default rounded-lg px-3 py-2 text-xs text-primary outline-none focus:border-accent/50 min-h-[80px] resize-none"
                     />
                   </div>
                 </div>
                 <div className="flex gap-2 pt-2">
                   <button 
                     onClick={() => setIsAddingSkill(false)}
-                    className="flex-1 px-3 py-2 rounded-lg border border-[#232328] text-[#e8e8ed] text-[10px] font-bold uppercase tracking-wider hover:bg-[#232328] transition-colors"
+                    className="flex-1 px-3 py-2 rounded-lg border border-default text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-elevated transition-colors"
                   >
                     Cancel
                   </button>
                   <button 
                     onClick={addCustomSkill}
-                    className="flex-1 px-3 py-2 rounded-lg bg-violet-500 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-violet-400 transition-colors shadow-lg shadow-violet-500/20"
+                    className="flex-1 px-3 py-2 rounded-lg bg-accent text-white text-[10px] font-bold uppercase tracking-wider hover:bg-accent-hover transition-colors shadow-lg shadow-accent/20"
                   >
                     Add Skill
                   </button>
@@ -222,25 +222,25 @@ export default function AgentSkillsTab() {
             ) : (
               <button 
                 onClick={() => setIsAddingSkill(true)}
-                className="w-full h-24 rounded-xl border border-dashed border-[#232328] hover:border-violet-500/50 hover:bg-violet-500/5 transition-all flex flex-col items-center justify-center gap-2 group"
+                className="w-full h-24 rounded-xl border border-dashed border-default hover:border-accent/50 hover:bg-accent/5 transition-all flex flex-col items-center justify-center gap-2 group"
               >
-                <div className="w-8 h-8 rounded-full bg-[#141416] border border-[#232328] flex items-center justify-center group-hover:bg-violet-500 group-hover:border-violet-400 transition-colors">
-                  <Plus size={16} className="text-[#6b6b7a] group-hover:text-white" />
+                <div className="w-8 h-8 rounded-full bg-surface border border-default flex items-center justify-center group-hover:bg-accent group-hover:border-accent-hover transition-colors">
+                  <Plus size={16} className="text-secondary group-hover:text-white" />
                 </div>
-                <span className="text-xs font-medium text-[#6b6b7a] group-hover:text-violet-400">Add custom skill</span>
+                <span className="text-xs font-medium text-secondary group-hover:text-accent">Add custom skill</span>
               </button>
             )}
           </div>
         </section>
 
         {/* USAGE STATS */}
-        <section className="bg-[#141416] rounded-2xl border border-[#232328] p-6">
+        <section className="bg-surface rounded-2xl border border-default p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <BarChart3 size={16} className="text-violet-400" />
-              <h3 className="text-xs font-bold text-[#e8e8ed] uppercase tracking-widest">Skill Usage (This Session)</h3>
+              <BarChart3 size={16} className="text-accent" />
+              <h3 className="text-xs font-bold text-primary uppercase tracking-widest">Skill Usage (This Session)</h3>
             </div>
-            <div className="flex items-center gap-1 text-[10px] text-[#6b6b7a]">
+            <div className="flex items-center gap-1 text-[10px] text-secondary">
               <Info size={12} />
               <span>Updated in real-time</span>
             </div>
@@ -249,12 +249,12 @@ export default function AgentSkillsTab() {
             {skills.filter(s => s.uses > 10).map(skill => (
               <div key={skill.id} className="space-y-2">
                 <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-tighter">
-                  <span className="text-[#6b6b7a]">{skill.name}</span>
-                  <span className="text-violet-400">{skill.uses}</span>
+                  <span className="text-secondary">{skill.name}</span>
+                  <span className="text-accent">{skill.uses}</span>
                 </div>
-                <div className="h-1 w-full bg-[#0a0a0c] rounded-full overflow-hidden">
+                <div className="h-1 w-full bg-page rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-violet-500" 
+                    className="h-full bg-accent" 
                     style={{ width: `${(skill.uses / 40) * 100}%` }} 
                   />
                 </div>
@@ -262,11 +262,11 @@ export default function AgentSkillsTab() {
             ))}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-tighter">
-                <span className="text-[#6b6b7a]">Total Actions</span>
-                <span className="text-emerald-400">121</span>
+                <span className="text-secondary">Total Actions</span>
+                <span className="text-success">121</span>
               </div>
-              <div className="h-1 w-full bg-[#0a0a0c] rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500 w-[75%]" />
+              <div className="h-1 w-full bg-page rounded-full overflow-hidden">
+                <div className="h-full bg-success w-[75%]" />
               </div>
             </div>
           </div>

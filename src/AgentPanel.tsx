@@ -15,17 +15,17 @@ import {
 const getStatusColor = (status: Agent["status"]) => {
   switch (status) {
     case "idle":
-      return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+      return "bg-secondary/20 text-secondary border-secondary/30";
     case "thinking":
-      return "bg-amber-500/20 text-amber-400 border-amber-500/30 animate-pulse";
+      return "bg-warning/20 text-warning border-warning/30 animate-pulse";
     case "running":
-      return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      return "bg-info/20 text-info border-info/30";
     case "done":
-      return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+      return "bg-success/20 text-success border-success/30";
     case "error":
-      return "bg-red-500/20 text-red-400 border-red-500/30";
+      return "bg-error/20 text-error border-error/30";
     default:
-      return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+      return "bg-secondary/20 text-secondary border-secondary/30";
   }
 };
 
@@ -264,11 +264,11 @@ export default function AgentPanel() {
                   key={msg.id}
                   className="text-[11px] font-mono text-[var(--text-muted)] leading-tight"
                 >
-                  <span className="text-[var(--accent)]">{msg.from}</span>
+                  <span className="text-accent">{msg.from}</span>
                   <span className="opacity-50 mx-1">→</span>
-                  <span className="text-blue-400">{msg.to}</span>
+                  <span className="text-info">{msg.to}</span>
                   <span className="opacity-50">: </span>
-                  <span className="text-[var(--text-primary)]">
+                  <span className="text-primary">
                     {msg.content}
                   </span>
                 </div>

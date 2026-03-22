@@ -41,21 +41,23 @@ export default function CodeEditorTab() {
   };
 
   const handleEditorMount: OnMount = (editor, monaco) => {
-    // Custom theme matching #0a0a0c
-    monaco.editor.defineTheme('tesseract-dark', {
+    // Custom theme matching --bg-page
+    monaco.editor.defineTheme('torsor-dark', {
       base: 'vs-dark',
       inherit: true,
       rules: [],
       colors: {
-        'editor.background': '#0a0a0c',
-        'editor.lineHighlightBackground': '#141416',
-        'editorLineNumber.foreground': '#44444d',
-        'editorLineNumber.activeForeground': '#e8e8ed',
-        'editorIndentGuide.background': '#232328',
-        'editor.selectionBackground': '#7c6ff740',
+        'editor.background': '#1C1C1E',
+        'editor.lineHighlightBackground': '#2B2B2E',
+        'editorLineNumber.foreground': '#5A5A5E',
+        'editorLineNumber.activeForeground': '#F0F0F2',
+        'editorIndentGuide.background': '#3A3A3D',
+        'editor.selectionBackground': '#7B6AEE40',
+        'editorWidget.background': '#2B2B2E',
+        'editorWidget.border': '#3E3E42',
       }
     });
-    monaco.editor.setTheme('tesseract-dark');
+    monaco.editor.setTheme('torsor-dark');
 
     // Add custom context menu items
     editor.addAction({
@@ -101,12 +103,12 @@ export default function CodeEditorTab() {
   const getFileIcon = (fileName: string) => {
     const ext = fileName.split('.').pop();
     switch (ext) {
-      case 'tsx': return <FileCode size={14} className="text-violet-400" />;
-      case 'ts': return <Code2 size={14} className="text-blue-400" />;
-      case 'css': return <Hash size={14} className="text-amber-400" />;
-      case 'json': return <FileJson size={14} className="text-gray-400" />;
-      case 'md': return <FileText size={14} className="text-emerald-400" />;
-      default: return <FileText size={14} className="text-[#6b6b7a]" />;
+      case 'tsx': return <FileCode size={14} className="text-accent" />;
+      case 'ts': return <Code2 size={14} className="text-info" />;
+      case 'css': return <Hash size={14} className="text-warning" />;
+      case 'json': return <FileJson size={14} className="text-tertiary" />;
+      case 'md': return <FileText size={14} className="text-success" />;
+      default: return <FileText size={14} className="text-tertiary" />;
     }
   };
 
@@ -140,8 +142,8 @@ export default function CodeEditorTab() {
 
   if (!activeFileId) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-[#6b6b7a] gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-[#141416] border border-[#232328] flex items-center justify-center">
+      <div className="flex-1 flex flex-col items-center justify-center text-secondary gap-4">
+        <div className="w-16 h-16 rounded-2xl bg-surface border border-default flex items-center justify-center">
           <Code2 size={32} />
         </div>
         <p className="text-sm font-medium">Select a file to edit</p>
@@ -150,23 +152,23 @@ export default function CodeEditorTab() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#0a0a0c] overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-page overflow-hidden">
       {/* EDITOR TAB BAR */}
-      <div className="h-8 bg-[#141416] flex items-center overflow-x-auto no-scrollbar shrink-0">
+      <div className="h-8 bg-surface flex items-center overflow-x-auto no-scrollbar shrink-0">
         {openFiles.map((file) => file && (
           <div 
             key={file.id}
             onClick={() => setActiveFile(file.id)}
             className={cn(
-              "h-full flex items-center gap-2 px-3 border-r border-[#232328] min-w-[120px] max-w-[200px] cursor-pointer group transition-colors shrink-0",
-              activeFileId === file.id ? "bg-[#0a0a0c] text-[#e8e8ed]" : "text-[#6b6b7a] hover:bg-[#1c1c20]"
+              "h-full flex items-center gap-2 px-3 border-r border-default min-w-[120px] max-w-[200px] cursor-pointer group transition-colors shrink-0",
+              activeFileId === file.id ? "bg-page text-primary" : "text-tertiary hover:bg-elevated"
             )}
           >
             <div className={cn(
               "w-1.5 h-1.5 rounded-full shrink-0",
-              file.name.endsWith('.tsx') ? "bg-violet-400" : 
-              file.name.endsWith('.ts') ? "bg-blue-400" : 
-              file.name.endsWith('.css') ? "bg-amber-400" : "bg-gray-400"
+              file.name.endsWith('.tsx') ? "bg-accent" : 
+              file.name.endsWith('.ts') ? "bg-info" : 
+              file.name.endsWith('.css') ? "bg-warning" : "bg-tertiary"
             )} />
             <span className="text-xs truncate flex-1">{file.name}</span>
             <button 
@@ -174,7 +176,7 @@ export default function CodeEditorTab() {
                 e.stopPropagation();
                 closeFile(file.id);
               }}
-              className="p-0.5 rounded hover:bg-[#232328] opacity-0 group-hover:opacity-100 transition-opacity"
+              className="p-0.5 rounded hover:bg-default/50 opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <X size={12} />
             </button>
@@ -183,10 +185,10 @@ export default function CodeEditorTab() {
       </div>
 
       {/* BREADCRUMB */}
-      <div className="h-6 px-3 flex items-center gap-1 text-[10px] text-[#44444d] border-b border-[#232328] bg-[#0a0a0c] shrink-0">
+      <div className="h-6 px-3 flex items-center gap-1 text-[10px] text-tertiary border-b border-default bg-page shrink-0">
         {getBreadcrumbs().map((part, idx, arr) => (
           <React.Fragment key={idx}>
-            <span className={cn(idx === arr.length - 1 && "text-[#6b6b7a]")}>{part}</span>
+            <span className={cn(idx === arr.length - 1 && "text-secondary")}>{part}</span>
             {idx < arr.length - 1 && <ChevronRight size={10} />}
           </React.Fragment>
         ))}
@@ -224,7 +226,7 @@ export default function CodeEditorTab() {
       </div>
 
       {/* BOTTOM STATUS */}
-      <div className="h-6 px-3 flex items-center justify-between text-[10px] text-[#44444d] border-t border-[#232328] bg-[#0a0a0c] shrink-0">
+      <div className="h-6 px-3 flex items-center justify-between text-[10px] text-tertiary border-t border-default bg-page shrink-0">
         <div className="flex items-center gap-3">
           <span>Ln {cursorPos.line}, Col {cursorPos.col}</span>
           <span>Spaces: 2</span>
@@ -232,7 +234,7 @@ export default function CodeEditorTab() {
         </div>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <div className="w-1.5 h-1.5 rounded-full bg-success" />
             Saved
           </span>
           <span className="uppercase">{getLanguage(activeFile.name)}</span>

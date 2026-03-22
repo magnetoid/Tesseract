@@ -45,14 +45,14 @@ export function ChatInput() {
   };
 
   return (
-    <div className="sticky bottom-0 bg-[#0a0a0c] pt-2 px-3 pb-3 space-y-2 z-10">
+    <div className="sticky bottom-0 bg-page pt-2 px-3 pb-3 space-y-2 z-10">
       {/* CONTEXT BAR */}
       {selectedContext.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {selectedContext.map((item) => (
             <div 
               key={item.id}
-              className="flex items-center gap-1.5 bg-violet-500/10 border border-violet-500/20 rounded-full px-2 py-0.5 text-[10px] font-bold text-violet-400"
+              className="flex items-center gap-1.5 bg-accent/10 border border-accent/20 rounded-full px-2 py-0.5 text-[10px] font-bold text-accent"
             >
               {item.type === 'file' && <Paperclip size={10} />}
               {item.type === 'code' && <Code2 size={10} />}
@@ -60,7 +60,7 @@ export function ChatInput() {
               <span>{item.name}</span>
               <button 
                 onClick={() => removeContext(item.id)}
-                className="hover:text-violet-300 transition-colors"
+                className="hover:text-accent-hover transition-colors"
               >
                 <X size={10} />
               </button>
@@ -70,7 +70,7 @@ export function ChatInput() {
       )}
 
       {/* INPUT CONTAINER */}
-      <div className="bg-[#141416] border border-[#232328] rounded-2xl p-2 focus-within:border-[#44444d] transition-colors">
+      <div className="bg-surface border border-default rounded-2xl p-2 focus-within:border-tertiary transition-colors">
         <TextareaAutosize
           ref={textareaRef}
           value={input}
@@ -78,21 +78,21 @@ export function ChatInput() {
           onKeyDown={handleKeyDown}
           placeholder={isAgentWorking ? "Agent is working..." : "Make, test, iterate..."}
           disabled={isAgentWorking}
-          className="w-full bg-transparent text-sm text-[#e8e8ed] placeholder-[#44444d] resize-none outline-none min-h-[36px] max-h-[120px] px-1 py-1"
+          className="w-full bg-transparent text-sm text-primary placeholder-tertiary resize-none outline-none min-h-[36px] max-h-[120px] px-1 py-1"
         />
 
         <div className="flex items-center justify-between mt-1 px-1">
           <div className="flex items-center gap-1">
-            <button className="p-1.5 text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#1c1c20] rounded-md transition-all">
+            <button className="p-1.5 text-secondary hover:text-primary hover:bg-elevated rounded-md transition-all">
               <Plus size={16} />
             </button>
             
             <div className="flex items-center gap-2 ml-2">
-              <span className="text-[10px] font-bold text-[#6b6b7a] uppercase tracking-wider">Plan</span>
+              <span className="text-[10px] font-bold text-secondary uppercase tracking-wider">Plan</span>
               <Switch.Root 
                 checked={planning}
                 onCheckedChange={setPlanning}
-                className="w-7 h-4 bg-[#1c1c20] rounded-full relative data-[state=checked]:bg-violet-500 transition-colors outline-none cursor-pointer"
+                className="w-7 h-4 bg-elevated rounded-full relative data-[state=checked]:bg-accent transition-colors outline-none cursor-pointer"
               >
                 <Switch.Thumb className="block w-2.5 h-2.5 bg-white rounded-full transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-3.5" />
               </Switch.Root>
@@ -102,21 +102,21 @@ export function ChatInput() {
           <div className="flex items-center gap-2">
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <button className="flex items-center gap-1 px-1.5 py-1 text-[10px] font-bold text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#1c1c20] rounded transition-all">
-                  <Zap size={12} className="text-violet-400" />
+                <button className="flex items-center gap-1 px-1.5 py-1 text-[10px] font-bold text-secondary hover:text-primary hover:bg-elevated rounded transition-all">
+                  <Zap size={12} className="text-accent" />
                   <span>Turbo</span>
                 </button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
-                <DropdownMenu.Content className="bg-[#1c1c20] border border-[#232328] rounded-md p-1 shadow-xl z-[100] min-w-[120px]">
-                  <DropdownMenu.Item className="flex items-center gap-2 px-2 py-1.5 text-[10px] font-bold text-[#e8e8ed] hover:bg-violet-500 rounded cursor-pointer outline-none">
-                    <Zap size={12} className="text-violet-400" /> Turbo
+                <DropdownMenu.Content className="bg-elevated border border-default rounded-md p-1 shadow-xl z-[100] min-w-[120px]">
+                  <DropdownMenu.Item className="flex items-center gap-2 px-2 py-1.5 text-[10px] font-bold text-primary hover:bg-accent rounded cursor-pointer outline-none">
+                    <Zap size={12} className="text-accent" /> Turbo
                   </DropdownMenu.Item>
-                  <DropdownMenu.Item className="flex items-center gap-2 px-2 py-1.5 text-[10px] font-bold text-[#e8e8ed] hover:bg-violet-500 rounded cursor-pointer outline-none">
-                    <Scale size={12} className="text-amber-400" /> Balanced
+                  <DropdownMenu.Item className="flex items-center gap-2 px-2 py-1.5 text-[10px] font-bold text-primary hover:bg-accent rounded cursor-pointer outline-none">
+                    <Scale size={12} className="text-warning" /> Balanced
                   </DropdownMenu.Item>
-                  <DropdownMenu.Item className="flex items-center gap-2 px-2 py-1.5 text-[10px] font-bold text-[#e8e8ed] hover:bg-violet-500 rounded cursor-pointer outline-none">
-                    <ZapOff size={12} className="text-red-400" /> Max Power
+                  <DropdownMenu.Item className="flex items-center gap-2 px-2 py-1.5 text-[10px] font-bold text-primary hover:bg-accent rounded cursor-pointer outline-none">
+                    <ZapOff size={12} className="text-error" /> Max Power
                   </DropdownMenu.Item>
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
@@ -128,10 +128,10 @@ export function ChatInput() {
               className={cn(
                 "w-7 h-7 rounded-full flex items-center justify-center transition-all",
                 isAgentWorking 
-                  ? "bg-red-500/10 text-red-400 hover:bg-red-500/20" 
+                  ? "bg-error/10 text-error hover:bg-error/20" 
                   : input.trim() 
-                    ? "bg-violet-500 text-white hover:bg-violet-400 shadow-lg shadow-violet-500/20" 
-                    : "bg-[#1c1c20] text-[#44444d]"
+                    ? "bg-accent text-white hover:bg-accent-hover shadow-lg shadow-accent/20" 
+                    : "bg-elevated text-tertiary"
               )}
             >
               {isAgentWorking ? <Square size={12} fill="currentColor" /> : <ArrowUp size={14} strokeWidth={3} />}

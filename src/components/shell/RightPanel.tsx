@@ -41,36 +41,36 @@ export function RightPanel({ className }: { className?: string }) {
           animate={{ width: 260, opacity: 1 }}
           exit={{ width: 0, opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className={cn("bg-[#141416] border-l border-[#232328] flex flex-col overflow-hidden shrink-0", className)}
+          className={cn("bg-surface border-l border-default flex flex-col overflow-hidden shrink-0", className)}
         >
           <div className="w-[260px] h-full flex flex-col">
-            <header className="h-9 px-3 flex items-center justify-between border-b border-[#232328] shrink-0">
-              <span className="text-xs font-medium text-[#e8e8ed] capitalize">
+            <header className="h-9 px-3 flex items-center justify-between border-b border-default shrink-0">
+              <span className="text-xs font-medium text-primary capitalize">
                 {rightPanelView === 'files' ? 'File tree' : rightPanelView}
               </span>
               <div className="flex items-center gap-1">
                 <button 
                   onClick={() => setRightPanelView('files')}
-                  className={cn("p-1 rounded transition-colors", rightPanelView === 'files' ? "text-violet-400 bg-violet-500/10" : "text-[#6b6b7a] hover:text-[#e8e8ed]")}
+                  className={cn("p-1 rounded transition-colors", rightPanelView === 'files' ? "text-accent bg-accent/10" : "text-secondary hover:text-primary")}
                 >
                   <FolderTree size={14} />
                 </button>
                 <button 
                   onClick={() => setRightPanelView('library')}
-                  className={cn("p-1 rounded transition-colors", rightPanelView === 'library' ? "text-violet-400 bg-violet-500/10" : "text-[#6b6b7a] hover:text-[#e8e8ed]")}
+                  className={cn("p-1 rounded transition-colors", rightPanelView === 'library' ? "text-accent bg-accent/10" : "text-secondary hover:text-primary")}
                 >
                   <Library size={14} />
                 </button>
                 <button 
                   onClick={() => setRightPanelView('search')}
-                  className={cn("p-1 rounded transition-colors", rightPanelView === 'search' ? "text-violet-400 bg-violet-500/10" : "text-[#6b6b7a] hover:text-[#e8e8ed]")}
+                  className={cn("p-1 rounded transition-colors", rightPanelView === 'search' ? "text-accent bg-accent/10" : "text-secondary hover:text-primary")}
                 >
                   <Search size={14} />
                 </button>
-                <div className="w-[1px] h-3 bg-[#232328] mx-1" />
+                <div className="w-[1px] h-3 bg-default mx-1" />
                 <button 
                   onClick={toggleRightPanel}
-                  className="p-1 text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors"
+                  className="p-1 text-secondary hover:text-primary transition-colors"
                 >
                   <ChevronRight size={14} />
                 </button>

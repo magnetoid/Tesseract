@@ -26,11 +26,11 @@ import { cn } from './lib/utils';
 
 const getFileIcon = (extension?: string) => {
   switch (extension) {
-    case 'tsx': return <FileCode2 size={14} className="text-violet-400" />;
-    case 'ts': return <FileType2 size={14} className="text-blue-400" />;
-    case 'css': return <FileCode2 size={14} className="text-amber-300" />;
-    case 'json': return <FileJson size={14} className="text-gray-400" />;
-    default: return <File size={14} className="text-gray-400" />;
+    case 'tsx': return <FileCode2 size={14} className="text-accent" />;
+    case 'ts': return <FileType2 size={14} className="text-info" />;
+    case 'css': return <FileCode2 size={14} className="text-warning" />;
+    case 'json': return <FileJson size={14} className="text-tertiary" />;
+    default: return <File size={14} className="text-tertiary" />;
   }
 };
 
@@ -59,14 +59,14 @@ const FileTreeItem = ({ item, level = 0, activeId, onSelect, onCreateFile, onCre
               <Collapsible.Trigger asChild>
                 <div 
                   className={cn(
-                    "flex items-center gap-1.5 py-1 px-2 cursor-pointer select-none text-sm transition-colors text-[#e8e8ed] hover:bg-[#2a2a30] border-l-2 border-transparent"
+                    "flex items-center gap-1.5 py-1 px-2 cursor-pointer select-none text-sm transition-colors text-primary hover:bg-elevated border-l-2 border-transparent"
                   )}
                   style={{ paddingLeft: `${level * 12 + 8}px` }}
                 >
-                  <span className="text-[#6b6b7a]">
+                  <span className="text-secondary">
                     {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   </span>
-                  {isOpen ? <FolderOpen size={14} className="text-blue-400" /> : <Folder size={14} className="text-blue-400" />}
+                  {isOpen ? <FolderOpen size={14} className="text-info" /> : <Folder size={14} className="text-info" />}
                   <span className="truncate">{item.name}</span>
                 </div>
               </Collapsible.Trigger>
@@ -92,7 +92,7 @@ const FileTreeItem = ({ item, level = 0, activeId, onSelect, onCreateFile, onCre
             <div 
               className={cn(
                 "flex items-center gap-1.5 py-1 px-2 cursor-pointer select-none text-sm transition-colors",
-                isActive ? "bg-violet-500/10 text-violet-300 border-l-2 border-violet-500" : "text-[#e8e8ed] hover:bg-[#2a2a30] border-l-2 border-transparent"
+                isActive ? "bg-accent/10 text-accent border-l-2 border-accent" : "text-primary hover:bg-elevated border-l-2 border-transparent"
               )}
               style={{ paddingLeft: `${level * 12 + 8}px` }}
               onClick={() => onSelect(item.id)}
@@ -105,38 +105,38 @@ const FileTreeItem = ({ item, level = 0, activeId, onSelect, onCreateFile, onCre
         </div>
       </ContextMenu.Trigger>
       <ContextMenu.Portal>
-        <ContextMenu.Content className="min-w-[160px] bg-[#1c1c20] border border-[#2a2a30] rounded-md p-1 shadow-xl z-50 text-sm text-[#e8e8ed]">
+        <ContextMenu.Content className="min-w-[160px] bg-surface border border-default rounded-md p-1 shadow-xl z-50 text-sm text-primary">
           {isFolder && (
             <>
               <ContextMenu.Item 
-                className="px-2 py-1.5 outline-none cursor-pointer hover:bg-violet-500/20 hover:text-violet-300 rounded-sm"
+                className="px-2 py-1.5 outline-none cursor-pointer hover:bg-accent/20 hover:text-accent rounded-sm"
                 onSelect={() => onCreateFile(item.id)}
               >
                 New File
               </ContextMenu.Item>
               <ContextMenu.Item 
-                className="px-2 py-1.5 outline-none cursor-pointer hover:bg-violet-500/20 hover:text-violet-300 rounded-sm"
+                className="px-2 py-1.5 outline-none cursor-pointer hover:bg-accent/20 hover:text-accent rounded-sm"
                 onSelect={() => onCreateFolder(item.id)}
               >
                 New Folder
               </ContextMenu.Item>
-              <ContextMenu.Separator className="h-[1px] bg-[#2a2a30] my-1" />
+              <ContextMenu.Separator className="h-[1px] bg-default my-1" />
             </>
           )}
           <ContextMenu.Item 
-            className="px-2 py-1.5 outline-none cursor-pointer hover:bg-[#2a2a30] rounded-sm"
+            className="px-2 py-1.5 outline-none cursor-pointer hover:bg-elevated rounded-sm"
             onSelect={() => onRename(item.id, item.name)}
           >
             Rename
           </ContextMenu.Item>
           <ContextMenu.Item 
-            className="px-2 py-1.5 outline-none cursor-pointer hover:bg-red-500/20 hover:text-red-400 rounded-sm"
+            className="px-2 py-1.5 outline-none cursor-pointer hover:bg-error/20 hover:text-error rounded-sm"
             onSelect={() => onDelete(item.id)}
           >
             Delete
           </ContextMenu.Item>
-          <ContextMenu.Separator className="h-[1px] bg-[#2a2a30] my-1" />
-          <ContextMenu.Item className="px-2 py-1.5 outline-none cursor-pointer hover:bg-[#2a2a30] rounded-sm">
+          <ContextMenu.Separator className="h-[1px] bg-default my-1" />
+          <ContextMenu.Item className="px-2 py-1.5 outline-none cursor-pointer hover:bg-elevated rounded-sm">
             Copy Path
           </ContextMenu.Item>
         </ContextMenu.Content>
@@ -288,27 +288,27 @@ export default function IDEShell() {
   };
 
   return (
-    <div className="flex flex-row h-full w-full overflow-hidden bg-[#0d0d0f]">
+    <div className="flex flex-row h-full w-full overflow-hidden bg-page">
       
       {/* PANEL 1 — File tree sidebar */}
       <div 
         ref={sidebarRef}
-        className="flex flex-col bg-[#141416] border-r border-[#2a2a30] shrink-0 relative"
+        className="flex flex-col bg-surface border-r border-default shrink-0 relative"
         style={{ width: `${sidebarWidth}px` }}
       >
-        <div className="h-9 flex items-center justify-between px-4 border-b border-[#2a2a30] shrink-0">
-          <span className="text-xs font-semibold text-[#6b6b7a] uppercase tracking-wider">Explorer</span>
+        <div className="h-9 flex items-center justify-between px-4 border-b border-default shrink-0">
+          <span className="text-xs font-semibold text-secondary uppercase tracking-wider">Explorer</span>
           <div className="flex items-center gap-1">
             <button 
               onClick={() => handleCreateFile(null)}
-              className="p-1 text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#2a2a30] rounded transition-colors"
+              className="p-1 text-secondary hover:text-primary hover:bg-elevated rounded transition-colors"
               title="New File"
             >
               <Plus size={14} />
             </button>
             <button 
               onClick={() => handleCreateFolder(null)}
-              className="p-1 text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#2a2a30] rounded transition-colors"
+              className="p-1 text-secondary hover:text-primary hover:bg-elevated rounded transition-colors"
               title="New Folder"
             >
               <FolderPlus size={14} />
@@ -333,14 +333,14 @@ export default function IDEShell() {
               ))}
             </div>
           </ScrollArea.Viewport>
-          <ScrollArea.Scrollbar orientation="vertical" className="flex select-none touch-none p-0.5 bg-transparent hover:bg-[#2a2a30] w-2 transition-colors">
-            <ScrollArea.Thumb className="flex-1 bg-[#2a2a30] rounded-[10px]" />
+          <ScrollArea.Scrollbar orientation="vertical" className="flex select-none touch-none p-0.5 bg-transparent hover:bg-elevated w-2 transition-colors">
+            <ScrollArea.Thumb className="flex-1 bg-elevated rounded-[10px]" />
           </ScrollArea.Scrollbar>
         </ScrollArea.Root>
 
         {/* Drag handle */}
         <div 
-          className="absolute top-0 right-0 bottom-0 w-1 cursor-col-resize bg-transparent hover:bg-violet-500/30 transition-colors z-10"
+          className="absolute top-0 right-0 bottom-0 w-1 cursor-col-resize bg-transparent hover:bg-accent/30 transition-colors z-10"
           onMouseDown={(e) => {
             e.preventDefault();
             setIsDraggingSidebar(true);
@@ -350,10 +350,10 @@ export default function IDEShell() {
       </div>
 
       {/* PANEL 2 — Editor area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#0d0d0f]">
+      <div className="flex-1 flex flex-col min-w-0 bg-page">
         
         {/* Tab bar */}
-        <div className="h-9 border-b border-[#2a2a30] flex items-center bg-[#141416] shrink-0">
+        <div className="h-9 border-b border-default flex items-center bg-surface shrink-0">
           <ScrollArea.Root className="flex-1 overflow-hidden">
             <ScrollArea.Viewport className="w-full h-full">
               <div className="flex h-full">
@@ -364,8 +364,8 @@ export default function IDEShell() {
                       key={file.id}
                       onClick={() => openFile(file.id)}
                       className={cn(
-                        "flex items-center gap-2 px-3 h-full border-r border-[#2a2a30] cursor-pointer select-none min-w-[120px] max-w-[200px] group transition-colors",
-                        isActive ? "bg-[#1c1c20] text-[#e8e8ed]" : "bg-[#141416] text-[#6b6b7a] hover:bg-[#1c1c20]/50 hover:text-[#e8e8ed]"
+                        "flex items-center gap-2 px-3 h-full border-r border-default cursor-pointer select-none min-w-[120px] max-w-[200px] group transition-colors",
+                        isActive ? "bg-elevated text-primary" : "bg-surface text-secondary hover:bg-elevated/50 hover:text-primary"
                       )}
                     >
                       {getFileIcon(file.extension)}
@@ -376,7 +376,7 @@ export default function IDEShell() {
                           closeTab(file.id);
                         }}
                         className={cn(
-                          "p-0.5 rounded-md hover:bg-[#2a2a30] transition-colors",
+                          "p-0.5 rounded-md hover:bg-elevated transition-colors",
                           isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                         )}
                       >
@@ -387,15 +387,15 @@ export default function IDEShell() {
                 })}
               </div>
             </ScrollArea.Viewport>
-            <ScrollArea.Scrollbar orientation="horizontal" className="flex select-none touch-none p-0.5 bg-transparent hover:bg-[#2a2a30] h-2 transition-colors">
-              <ScrollArea.Thumb className="flex-1 bg-[#2a2a30] rounded-[10px]" />
+            <ScrollArea.Scrollbar orientation="horizontal" className="flex select-none touch-none p-0.5 bg-transparent hover:bg-elevated h-2 transition-colors">
+              <ScrollArea.Thumb className="flex-1 bg-elevated rounded-[10px]" />
             </ScrollArea.Scrollbar>
           </ScrollArea.Root>
           
-          <div className="px-2 shrink-0 border-l border-[#2a2a30] h-full flex items-center">
+          <div className="px-2 shrink-0 border-l border-default h-full flex items-center">
             <button 
               onClick={() => handleCreateFile(null)}
-              className="p-1.5 text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#2a2a30] rounded-md transition-colors"
+              className="p-1.5 text-secondary hover:text-primary hover:bg-elevated rounded-md transition-colors"
             >
               <Plus size={16} />
             </button>
@@ -404,7 +404,7 @@ export default function IDEShell() {
 
         {/* Editor area */}
         <div className="flex-grow relative">
-          <div className="absolute inset-0 flex items-center justify-center text-[#6b6b7a] font-mono text-sm">
+          <div className="absolute inset-0 flex items-center justify-center text-secondary font-mono text-sm">
             {activeFileNode ? (
               <Editor
                 height="100%"
@@ -444,7 +444,7 @@ export default function IDEShell() {
         <BottomPanel />
 
         {/* Slim status bar */}
-        <div className="h-6 bg-[#141416] border-t border-[#2a2a30] flex items-center justify-between px-3 text-xs text-[#6b6b7a] shrink-0">
+        <div className="h-6 bg-surface border-t border-default flex items-center justify-between px-3 text-xs text-secondary shrink-0">
           <div className="flex items-center gap-4">
             {activeFileNode ? (
               <>
@@ -465,15 +465,15 @@ export default function IDEShell() {
 
       {/* PANEL 3 — Agent panel */}
       <div 
-        className={cn(
-          "border-l border-[#2a2a30] bg-[#141416] flex shrink-0 transition-all duration-200 ease-in-out relative",
-          isAgentPanelOpen ? "w-80" : "w-8"
-        )}
+          className={cn(
+            "border-l border-default bg-surface flex shrink-0 transition-all duration-200 ease-in-out relative",
+            isAgentPanelOpen ? "w-80" : "w-8"
+          )}
       >
         {/* Collapse toggle */}
         <button 
           onClick={() => setIsAgentPanelOpen(!isAgentPanelOpen)}
-          className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-[#1c1c20] border border-[#2a2a30] rounded-full flex items-center justify-center text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#2a2a30] transition-colors z-20 shadow-md"
+          className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-elevated border border-default rounded-full flex items-center justify-center text-secondary hover:text-primary hover:bg-elevated transition-colors z-20 shadow-md"
         >
           {isAgentPanelOpen ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
@@ -485,12 +485,12 @@ export default function IDEShell() {
         ) : (
           <div className="w-full h-full flex flex-col items-center py-4 gap-6">
             <div className="flex flex-col gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500" />
-              <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <div className="w-2 h-2 rounded-full bg-gray-500" />
+              <div className="w-2 h-2 rounded-full bg-success" />
+              <div className="w-2 h-2 rounded-full bg-warning animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-secondary" />
             </div>
             <div className="flex-1 flex items-center justify-center">
-              <span className="text-[#6b6b7a] text-xs font-semibold tracking-[0.2em] -rotate-90 whitespace-nowrap select-none">
+              <span className="text-secondary text-xs font-semibold tracking-[0.2em] -rotate-90 whitespace-nowrap select-none">
                 AGENTS
               </span>
             </div>
@@ -501,16 +501,16 @@ export default function IDEShell() {
       {/* File Operation Dialog */}
       <Dialog.Root open={dialogState.isOpen} onOpenChange={(isOpen) => setDialogState(prev => ({ ...prev, isOpen }))}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-          <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border border-[#2a2a30] bg-[#141416] p-6 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-xl">
+          <Dialog.Overlay className="fixed inset-0 bg-page/60 backdrop-blur-sm z-50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border border-default bg-surface p-6 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-xl">
             <div className="flex flex-col gap-2">
-              <Dialog.Title className="text-lg font-semibold text-[#e8e8ed]">
+              <Dialog.Title className="text-lg font-semibold text-primary">
                 {dialogState.type === 'createFile' && 'New File'}
                 {dialogState.type === 'createFolder' && 'New Folder'}
                 {dialogState.type === 'rename' && 'Rename'}
                 {dialogState.type === 'delete' && 'Delete'}
               </Dialog.Title>
-              <Dialog.Description className="text-sm text-[#6b6b7a]">
+              <Dialog.Description className="text-sm text-secondary">
                 {dialogState.type === 'delete' 
                   ? 'Are you sure you want to delete this? This action cannot be undone.'
                   : `Enter a name for the ${dialogState.type === 'createFolder' ? 'folder' : 'file'}.`
@@ -525,14 +525,14 @@ export default function IDEShell() {
                   value={dialogInput}
                   onChange={(e) => setDialogInput(e.target.value)}
                   placeholder={dialogState.type === 'createFolder' ? 'folder-name' : 'filename.ext'}
-                  className="w-full bg-[#1c1c20] border border-[#2a2a30] rounded-md px-3 py-2 text-sm text-[#e8e8ed] focus:outline-none focus:border-violet-500"
+                  className="w-full bg-elevated border border-default rounded-md px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
                   autoFocus
                 />
               )}
               
               <div className="flex justify-end gap-3 mt-2">
                 <Dialog.Close asChild>
-                  <button type="button" className="px-4 py-2 text-sm font-medium text-[#e8e8ed] hover:bg-[#2a2a30] rounded-md transition-colors">
+                  <button type="button" className="px-4 py-2 text-sm font-medium text-primary hover:bg-elevated rounded-md transition-colors">
                     Cancel
                   </button>
                 </Dialog.Close>
@@ -540,7 +540,7 @@ export default function IDEShell() {
                   type="submit"
                   className={cn(
                     "px-4 py-2 text-sm font-medium text-white rounded-md transition-colors shadow-sm",
-                    dialogState.type === 'delete' ? "bg-red-600 hover:bg-red-500" : "bg-violet-600 hover:bg-violet-500"
+                    dialogState.type === 'delete' ? "bg-error hover:bg-error/90" : "bg-accent hover:bg-accent-hover"
                   )}
                 >
                   {dialogState.type === 'delete' ? 'Delete' : 'Confirm'}

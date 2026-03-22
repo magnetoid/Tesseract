@@ -8,7 +8,8 @@ import {
   Terminal, 
   Rocket, 
   ClipboardList,
-  ChevronRight
+  ChevronRight,
+  Lock as LockIcon
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { ChatMessageData } from '../../stores/chatStore';
@@ -28,33 +29,33 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
   if (isWork) {
     return (
-      <div className="flex items-center gap-2 py-1.5 px-2 bg-[#141416]/50 rounded-lg border border-[#232328] mb-2">
-        <Loader2 size={12} className="text-violet-400 animate-spin" />
-        <span className="text-[11px] text-[#6b6b7a] font-medium">{message.content}</span>
+      <div className="flex items-center gap-2 py-1.5 px-2 bg-surface/50 rounded-lg border border-default mb-2">
+        <Loader2 size={12} className="text-accent animate-spin" />
+        <span className="text-[11px] text-secondary font-medium">{message.content}</span>
       </div>
     );
   }
 
   if (isPlan) {
     return (
-      <div className="bg-[#141416] border border-[#232328] rounded-xl p-3 mb-4 overflow-hidden">
+      <div className="bg-surface border border-default rounded-xl p-3 mb-4 overflow-hidden">
         <div className="flex items-center gap-2 mb-2">
-          <ClipboardList size={14} className="text-violet-400" />
-          <span className="text-xs font-bold text-[#e8e8ed]">Proposed Plan</span>
+          <ClipboardList size={14} className="text-accent" />
+          <span className="text-xs font-bold text-primary">Proposed Plan</span>
         </div>
         <div className="space-y-2">
           {message.metadata?.steps?.map((step: any, idx: number) => (
-            <div key={idx} className="flex gap-2 text-xs text-[#6b6b7a]">
-              <span className="text-violet-400 font-mono">{idx + 1}.</span>
+            <div key={idx} className="flex gap-2 text-xs text-secondary">
+              <span className="text-accent font-mono">{idx + 1}.</span>
               <span>{step}</span>
             </div>
           ))}
         </div>
         <div className="mt-3 flex gap-2">
-          <button className="flex-1 bg-violet-500 hover:bg-violet-400 text-white py-1 rounded-md text-[10px] font-bold transition-colors">
+          <button className="flex-1 bg-accent hover:bg-accent-hover text-white py-1 rounded-md text-[10px] font-bold transition-colors">
             Approve & Execute
           </button>
-          <button className="px-3 border border-[#232328] text-[#6b6b7a] hover:text-[#e8e8ed] py-1 rounded-md text-[10px] font-bold transition-colors">
+          <button className="px-3 border border-default text-secondary hover:text-primary py-1 rounded-md text-[10px] font-bold transition-colors">
             Modify
           </button>
         </div>
@@ -64,12 +65,12 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
   if (isTerminal) {
     return (
-      <div className="bg-[#0a0a0c] border border-[#232328] rounded-lg mb-4 overflow-hidden">
-        <div className="bg-[#141416] px-2 py-1 border-b border-[#232328] flex items-center gap-2">
-          <Terminal size={10} className="text-[#6b6b7a]" />
-          <span className="text-[10px] font-mono text-[#6b6b7a]">terminal</span>
+      <div className="bg-page border border-default rounded-lg mb-4 overflow-hidden">
+        <div className="bg-surface px-2 py-1 border-b border-default flex items-center gap-2">
+          <Terminal size={10} className="text-secondary" />
+          <span className="text-[10px] font-mono text-secondary">terminal</span>
         </div>
-        <pre className="p-2 text-[11px] font-mono text-emerald-400 overflow-x-auto">
+        <pre className="p-2 text-[11px] font-mono text-success overflow-x-auto">
           <code>{message.content}</code>
         </pre>
       </div>
@@ -78,11 +79,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
   if (isError) {
     return (
-      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 mb-4 flex gap-3">
-        <AlertCircle size={16} className="text-red-400 shrink-0" />
+      <div className="bg-error/10 border border-error/20 rounded-xl p-3 mb-4 flex gap-3">
+        <AlertCircle size={16} className="text-error shrink-0" />
         <div className="space-y-1">
-          <p className="text-xs font-bold text-red-400">Error encountered</p>
-          <p className="text-xs text-red-400/80 leading-relaxed">{message.content}</p>
+          <p className="text-xs font-bold text-error">Error encountered</p>
+          <p className="text-xs text-error/80 leading-relaxed">{message.content}</p>
         </div>
       </div>
     );
@@ -90,12 +91,12 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
   if (isDeploy) {
     return (
-      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 mb-4 flex gap-3">
-        <Rocket size={16} className="text-emerald-400 shrink-0" />
+      <div className="bg-success/10 border border-success/20 rounded-xl p-3 mb-4 flex gap-3">
+        <Rocket size={16} className="text-success shrink-0" />
         <div className="space-y-1">
-          <p className="text-xs font-bold text-emerald-400">Deployment Successful</p>
-          <p className="text-xs text-emerald-400/80 leading-relaxed">{message.content}</p>
-          <button className="mt-2 text-[10px] font-bold text-emerald-400 underline underline-offset-2">
+          <p className="text-xs font-bold text-success">Deployment Successful</p>
+          <p className="text-xs text-success/80 leading-relaxed">{message.content}</p>
+          <button className="mt-2 text-[10px] font-bold text-success underline underline-offset-2">
             View Live App
           </button>
         </div>
@@ -110,7 +111,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
     )}>
       <div className={cn(
         "w-7 h-7 rounded-full flex items-center justify-center shrink-0 border",
-        isUser ? "bg-violet-500/10 border-violet-500/20 text-violet-400" : "bg-[#1c1c20] border-[#232328] text-[#6b6b7a]"
+        isUser ? "bg-accent/10 border-accent/20 text-accent" : "bg-elevated border-default text-secondary"
       )}>
         {isUser ? <User size={14} /> : <Bot size={14} />}
       </div>
@@ -121,12 +122,21 @@ export function ChatMessage({ message }: ChatMessageProps) {
         <div className={cn(
           "px-3 py-2 rounded-2xl text-sm leading-relaxed",
           isUser 
-            ? "bg-violet-500 text-white rounded-tr-none" 
-            : "bg-[#141416] text-[#e8e8ed] border border-[#232328] rounded-tl-none"
+            ? "bg-accent text-white rounded-tr-none" 
+            : "bg-surface text-primary border border-default rounded-tl-none"
         )}>
           {message.content}
+          
+          {message.metadata?.action === 'move_to_secrets' && (
+            <div className="mt-3 pt-3 border-t border-default">
+              <button className="w-full bg-accent hover:bg-accent-hover text-white py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-2">
+                <LockIcon size={12} />
+                Move to Secrets
+              </button>
+            </div>
+          )}
         </div>
-        <span className="text-[10px] text-[#44444d] px-1">
+        <span className="text-[10px] text-tertiary px-1">
           {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>

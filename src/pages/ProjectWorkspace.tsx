@@ -18,10 +18,10 @@ export function ProjectWorkspace() {
 
   if (!project) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#0a0a0c] text-[#e8e8ed]">
+      <div className="flex items-center justify-center h-screen bg-bg-page text-text-primary">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Project not found</h1>
-          <p className="text-[#6b6b7a] mt-2">The project you're looking for doesn't exist or has been deleted.</p>
+          <p className="text-text-secondary mt-2">The project you're looking for doesn't exist or has been deleted.</p>
         </div>
       </div>
     );

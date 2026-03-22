@@ -3,13 +3,12 @@ import { persist } from 'zustand/middleware';
 
 export interface User {
   id: string;
-  email: string;
   name: string;
-  avatarUrl: string;
-  workspaceId: string;
-  plan: 'free' | 'pro' | 'team';
-  tokenBalance?: number;
-  tokenLimit?: number;
+  email: string;
+  avatarUrl: string | null;
+  role: 'user' | 'super_admin';
+  onboarded: boolean;
+  createdAt: string;
 }
 
 interface AuthState {
@@ -19,9 +18,9 @@ interface AuthState {
   loginWithGitHub: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string) => Promise<void>;
+  signup: (name: string, email: string) => Promise<void>;
   logout: () => void;
-  upgradePlan: (plan: User['plan']) => void;
-  addTokens: (amount: number) => void;
+  setOnboarded: (onboarded: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -38,10 +37,9 @@ export const useAuthStore = create<AuthState>()(
           email: 'dev_user@github.com',
           name: 'GitHub Developer',
           avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=github',
-          workspaceId: 'w1',
-          plan: 'free',
-          tokenBalance: 45000,
-          tokenLimit: 100000,
+          role: 'user',
+          onboarded: true,
+          createdAt: new Date().toISOString(),
         };
         set({ user: mockUser, isAuthenticated: true, isLoading: false });
       },
@@ -53,10 +51,9 @@ export const useAuthStore = create<AuthState>()(
           email: 'user@google.com',
           name: 'Google User',
           avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=google',
-          workspaceId: 'w1',
-          plan: 'free',
-          tokenBalance: 45000,
-          tokenLimit: 100000,
+          role: 'user',
+          onboarded: true,
+          createdAt: new Date().toISOString(),
         };
         set({ user: mockUser, isAuthenticated: true, isLoading: false });
       },
@@ -68,25 +65,31 @@ export const useAuthStore = create<AuthState>()(
           email,
           name: email.split('@')[0],
           avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-          workspaceId: 'w1',
-          plan: 'free',
-          tokenBalance: 45000,
-          tokenLimit: 100000,
+          role: email === 'marko.tiosavljevic@gmail.com' ? 'super_admin' : 'user',
+          onboarded: true,
+          createdAt: new Date().toISOString(),
+        };
+        set({ user: mockUser, isAuthenticated: true, isLoading: false });
+      },
+      signup: async (name: string, email: string) => {
+        set({ isLoading: true });
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        const mockUser: User = {
+          id: 'u_new_' + Math.random().toString(36).substr(2, 9),
+          email,
+          name,
+          avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+          role: 'user',
+          onboarded: false,
+          createdAt: new Date().toISOString(),
         };
         set({ user: mockUser, isAuthenticated: true, isLoading: false });
       },
       logout: () => {
         set({ user: null, isAuthenticated: false });
       },
-      upgradePlan: (plan) => set((state) => ({
-        user: state.user ? { 
-          ...state.user, 
-          plan, 
-          tokenLimit: plan === 'pro' ? 2000000 : plan === 'team' ? 10000000 : 100000 
-        } : null
-      })),
-      addTokens: (amount) => set((state) => ({
-        user: state.user ? { ...state.user, tokenBalance: state.user.tokenBalance + amount } : null
+      setOnboarded: (onboarded) => set((state) => ({
+        user: state.user ? { ...state.user, onboarded } : null
       })),
     }),
     {

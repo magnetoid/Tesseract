@@ -1,34 +1,42 @@
 import React, { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Separator from '@radix-ui/react-separator';
-import { X, CreditCard, Zap, Shield, Users, Check, ExternalLink, Loader2 } from 'lucide-react';
+import { X, CreditCard, Zap, Shield, Check, ExternalLink, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import { useActiveWorkspace, useWorkspaceStore } from '../../stores/workspaceStore';
 import { cn } from '../../lib/utils';
 
 export function BillingModal({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
-  const { user, upgradePlan, addTokens } = useAuthStore();
+  const { user } = useAuthStore();
+  const activeWorkspace = useActiveWorkspace();
+  const { updateWorkspace } = useWorkspaceStore();
   const [isUpgrading, setIsUpgrading] = useState<string | null>(null);
 
   const handleUpgrade = async (plan: 'pro' | 'team') => {
+    if (!activeWorkspace) return;
     setIsUpgrading(plan);
     await new Promise(resolve => setTimeout(resolve, 1500));
-    upgradePlan(plan);
+    updateWorkspace(activeWorkspace.id, { plan });
     setIsUpgrading(null);
     // In a real app, this would redirect to Stripe
-    alert(`Upgraded to ${plan}!`);
   };
 
   const handleTopUp = async (amount: number, price: number) => {
+    if (!activeWorkspace) return;
     setIsUpgrading(`topup-${amount}`);
     await new Promise(resolve => setTimeout(resolve, 1000));
-    addTokens(amount);
+    updateWorkspace(activeWorkspace.id, { 
+      usage: { 
+        ...activeWorkspace.usage, 
+        tokensUsedThisMonth: Math.max(0, activeWorkspace.usage.tokensUsedThisMonth - amount) 
+      } 
+    });
     setIsUpgrading(null);
-    alert(`Added ${amount.toLocaleString()} tokens!`);
   };
 
-  if (!user) return null;
+  if (!user || !activeWorkspace) return null;
 
-  const usagePercent = (user.tokenBalance / user.tokenLimit) * 100;
+  const usagePercent = (activeWorkspace.usage.tokensUsedThisMonth / (activeWorkspace.limits.maxTokensPerMonth || 1)) * 100;
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -52,20 +60,20 @@ export function BillingModal({ open, onOpenChange }: { open: boolean, onOpenChan
                 <div className="flex flex-col">
                   <span className="text-[10px] font-bold text-[#6b6b7a] uppercase tracking-wider">Current Plan</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-[#e8e8ed] capitalize">{user.plan}</span>
+                    <span className="text-lg font-bold text-[#e8e8ed] capitalize">{activeWorkspace.plan}</span>
                     <span className="px-2 py-0.5 bg-violet-500/10 text-violet-400 text-[10px] font-bold rounded-full border border-violet-500/20">Active</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] font-bold text-[#6b6b7a] uppercase tracking-wider">Token Balance</span>
-                  <p className="text-lg font-bold text-[#e8e8ed] tabular-nums">{(user.tokenBalance ?? 0).toLocaleString()}</p>
+                  <span className="text-[10px] font-bold text-[#6b6b7a] uppercase tracking-wider">Tokens Used</span>
+                  <p className="text-lg font-bold text-[#e8e8ed] tabular-nums">{(activeWorkspace.usage.tokensUsedThisMonth ?? 0).toLocaleString()}</p>
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-[10px] font-bold text-[#6b6b7a] uppercase tracking-wider">
                   <span>Usage</span>
-                  <span>{(user.tokenBalance ?? 0).toLocaleString()} / {(user.tokenLimit ?? 0).toLocaleString()}</span>
+                  <span>{(activeWorkspace.usage.tokensUsedThisMonth ?? 0).toLocaleString()} / {(activeWorkspace.limits.maxTokensPerMonth ?? 0).toLocaleString()}</span>
                 </div>
                 <div className="h-2 bg-[#0d0d0f] rounded-full overflow-hidden border border-[#232328]">
                   <div 
@@ -77,7 +85,7 @@ export function BillingModal({ open, onOpenChange }: { open: boolean, onOpenChan
             </div>
 
             {/* Upgrade Section */}
-            {user.plan === 'free' && (
+            {activeWorkspace.plan === 'free' && (
               <div className="space-y-4">
                 <h3 className="text-sm font-bold text-[#e8e8ed] flex items-center gap-2">
                   <Zap size={16} className="text-amber-400" />

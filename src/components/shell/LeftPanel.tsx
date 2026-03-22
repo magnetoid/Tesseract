@@ -15,7 +15,7 @@ export function LeftPanel({ className }: { className?: string }) {
           animate={{ width: 380, opacity: 1 }}
           exit={{ width: 0, opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className={cn("bg-[#0a0a0c] border-r border-[#232328] flex flex-col overflow-hidden shrink-0", className)}
+          className={cn("bg-page border-r border-default flex flex-col overflow-hidden shrink-0", className)}
         >
           <div className="w-[380px] h-full flex flex-col">
             <ChatPanel />

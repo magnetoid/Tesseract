@@ -21,8 +21,11 @@ import { useEditorStore } from './stores/editorStore';
 import { useGitStore } from './stores/gitStore';
 import { useSocialStore } from './stores/socialStore';
 import { useAuthStore } from './stores/authStore';
+import { useActiveWorkspace, useWorkspaceStore } from './stores/workspaceStore';
 import { DeployModal } from './DeployModal';
+import { NotificationBell } from './components/shared/NotificationBell';
 import { BillingModal } from './components/billing/BillingModal';
+import { ConnectionStatus } from './components/shared/ConnectionStatus';
 import { PublishTemplateDialog } from './components/shared/PublishTemplateDialog';
 import { cn } from './lib/utils';
 
@@ -54,6 +57,7 @@ export default function TopBar({ onOpenSettings }: { onOpenSettings: () => void 
   const { currentBranch, branches, switchBranch, createBranch } = useGitStore();
   const { shareLink, accessLevel, setAccessLevel, allowForking, setAllowForking, collaborators, invitePerson, removeCollaborator, publishTemplate, forkProject } = useSocialStore();
   const { user } = useAuthStore();
+  const activeWorkspace = useActiveWorkspace();
   
   const hasFiles = files.length > 0;
   const isRunning = agents.some(a => a.status === 'running' || a.status === 'thinking');
@@ -323,16 +327,16 @@ export default function TopBar({ onOpenSettings }: { onOpenSettings: () => void 
 
         {/* Run Button */}
         <div className="flex items-center gap-2">
-          {user && (
+          {activeWorkspace && (
             <button 
               onClick={() => setBillingModalOpen(true)}
               className={cn(
                 "flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border transition-all duration-300",
-                user.tokenBalance < 10000 ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-[#1c1c20] text-[#6b6b7a] border-[#2a2a30] hover:border-violet-500/30"
+                activeWorkspace.usage.tokensUsedThisMonth > (activeWorkspace.limits.maxTokensPerMonth || 0) * 0.9 ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-[#1c1c20] text-[#6b6b7a] border-[#2a2a30] hover:border-violet-500/30"
               )}
             >
               <CreditCard size={10} />
-              <span className="tabular-nums">{(user.tokenBalance ?? 0).toLocaleString()}</span>
+              <span className="tabular-nums">{(activeWorkspace.limits.maxTokensPerMonth - activeWorkspace.usage.tokensUsedThisMonth).toLocaleString()}</span>
             </button>
           )}
           
@@ -489,6 +493,11 @@ export default function TopBar({ onOpenSettings }: { onOpenSettings: () => void 
           </Popover.Portal>
         </Popover.Root>
 
+        {/* Notifications */}
+        <NotificationBell />
+
+        <ConnectionStatus />
+
         {/* Settings Dropdown */}
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
@@ -541,17 +550,17 @@ export default function TopBar({ onOpenSettings }: { onOpenSettings: () => void 
                 </DropdownMenu.RadioItem>
                 <DropdownMenu.RadioItem 
                   value="max-power"
-                  disabled={user?.plan === 'free'}
+                  disabled={activeWorkspace?.plan === 'free'}
                   className={cn(
                     "px-2 py-1.5 outline-none cursor-pointer hover:bg-amber-500/20 hover:text-amber-400 rounded-sm transition-colors flex items-center justify-between",
-                    user?.plan === 'free' && "opacity-50 cursor-not-allowed"
+                    activeWorkspace?.plan === 'free' && "opacity-50 cursor-not-allowed"
                   )}
                 >
                   <div className="flex items-center gap-2">
                     <Zap size={12} />
                     Max Power
                   </div>
-                  {user?.plan === 'free' && <Lock size={10} className="text-[#6b6b7a]" />}
+                  {activeWorkspace?.plan === 'free' && <Lock size={10} className="text-[#6b6b7a]" />}
                 </DropdownMenu.RadioItem>
               </DropdownMenu.RadioGroup>
 

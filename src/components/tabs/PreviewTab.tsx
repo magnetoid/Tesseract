@@ -21,6 +21,7 @@ import {
 import { cn } from '../../lib/utils';
 import { useAppStore } from '../../useAppStore';
 import { useLayoutStore } from '../../stores/layoutStore';
+import { EmptyState } from '../shared/EmptyState';
 
 export default function PreviewTab() {
   const { buildStatus, previewUrl, triggerBuild } = useAppStore();
@@ -58,18 +59,13 @@ export default function PreviewTab() {
     if (buildStatus === 'idle') {
       return (
         <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-          <Monitor size={48} className="text-[#44444d] mb-4" />
-          <h3 className="text-base font-medium text-[#e8e8ed]">Your app is not running</h3>
-          <div className="flex items-center gap-2 mt-4">
-            <button 
-              onClick={triggerBuild}
-              className="bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-1.5 rounded-md text-sm font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20"
-            >
-              <Play size={14} fill="currentColor" />
-              Run
-            </button>
-            <span className="text-sm text-[#6b6b7a]">to preview your app.</span>
-          </div>
+          <EmptyState 
+            icon={Monitor}
+            title="Your app is not running"
+            description="Run your application to see the live preview."
+            actionLabel="Run"
+            onAction={triggerBuild}
+          />
         </div>
       );
     }
@@ -78,12 +74,12 @@ export default function PreviewTab() {
       return (
         <div className="flex-1 flex flex-col items-center justify-center gap-3">
           <div className="relative">
-            <Loader2 size={32} className="text-violet-500 animate-spin" />
+            <Loader2 size={32} className="text-accent animate-spin" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-1 h-1 bg-violet-500 rounded-full animate-ping" />
+              <div className="w-1 h-1 bg-accent rounded-full animate-ping" />
             </div>
           </div>
-          <div className="flex items-center gap-1 text-sm text-[#6b6b7a]">
+          <div className="flex items-center gap-1 text-sm text-secondary">
             <span>Starting dev server</span>
             <span className="flex gap-0.5">
               <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
@@ -106,7 +102,7 @@ export default function PreviewTab() {
           <div className="flex-1 opacity-40 pointer-events-none grayscale">
              {/* Show last successful or empty */}
              <div className="w-full h-full flex items-center justify-center">
-                <Monitor size={48} className="text-[#232328]" />
+                <Monitor size={48} className="text-subtle" />
              </div>
           </div>
         </div>
@@ -135,41 +131,41 @@ export default function PreviewTab() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0a0a0c] overflow-hidden">
+    <div className="flex flex-col h-full bg-page overflow-hidden">
       {/* TOOLBAR */}
-      <header className="h-9 bg-[#141416] border-b border-[#232328] flex items-center px-2 gap-1 shrink-0 z-10">
-        <div className="bg-[#1c1c20] rounded-full px-2 py-0.5 text-[10px] font-bold text-[#6b6b7a] uppercase tracking-wider cursor-not-allowed opacity-50">
+      <header className="h-9 bg-surface border-b border-default flex items-center px-2 gap-1 shrink-0 z-10">
+        <div className="bg-elevated rounded-full px-2 py-0.5 text-[10px] font-bold text-tertiary uppercase tracking-wider cursor-not-allowed opacity-50">
           Canvas
         </div>
         
-        <Separator.Root orientation="vertical" className="w-[1px] h-4 bg-[#232328] mx-1" />
+        <Separator.Root orientation="vertical" className="w-[1px] h-4 bg-default mx-1" />
         
         <div className="flex items-center gap-0.5">
-          <button disabled className="p-1 text-[#44444d] cursor-not-allowed">
+          <button disabled className="p-1 text-tertiary/50 cursor-not-allowed">
             <ArrowLeft size={14} />
           </button>
-          <button disabled className="p-1 text-[#44444d] cursor-not-allowed">
+          <button disabled className="p-1 text-tertiary/50 cursor-not-allowed">
             <ArrowRight size={14} />
           </button>
           <button 
             onClick={handleRefresh}
-            className="p-1 text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors"
+            className="p-1 text-secondary hover:text-primary transition-colors"
           >
             <RotateCw size={14} />
           </button>
         </div>
 
-        <div className="flex-1 flex items-center bg-[#1c1c20] rounded-full px-3 py-1 gap-2 border border-[#232328]/50">
-          <span className="text-[10px] text-[#44444d] font-mono">localhost:3000 /</span>
+        <div className="flex-1 flex items-center bg-inset rounded-full px-3 py-1 gap-2 border border-default/50">
+          <span className="text-[10px] text-tertiary font-mono">localhost:3000 /</span>
           <input 
             type="text" 
             readOnly 
             value="" 
-            className="bg-transparent text-[10px] text-[#6b6b7a] outline-none w-full"
+            className="bg-transparent text-[10px] text-secondary outline-none w-full"
           />
         </div>
 
-        <Separator.Root orientation="vertical" className="w-[1px] h-4 bg-[#232328] mx-1" />
+        <Separator.Root orientation="vertical" className="w-[1px] h-4 bg-default mx-1" />
 
         <div className="flex items-center gap-1">
           <Tooltip.Provider delayDuration={200}>
@@ -177,13 +173,13 @@ export default function PreviewTab() {
               <Tooltip.Trigger asChild>
                 <button 
                   onClick={() => openTab('code')}
-                  className="p-1.5 text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors"
+                  className="p-1.5 text-secondary hover:text-primary transition-colors"
                 >
                   <Pencil size={14} />
                 </button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
-                <Tooltip.Content className="bg-[#1c1c20] text-[#e8e8ed] text-[10px] px-2 py-1 rounded border border-[#232328] shadow-xl" sideOffset={5}>
+                <Tooltip.Content className="bg-elevated text-primary text-[10px] px-2 py-1 rounded border border-default shadow-xl" sideOffset={5}>
                   Edit Page
                 </Tooltip.Content>
               </Tooltip.Portal>
@@ -193,13 +189,13 @@ export default function PreviewTab() {
               <Tooltip.Trigger asChild>
                 <button 
                   onClick={handleCopyUrl}
-                  className="p-1.5 text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors"
+                  className="p-1.5 text-secondary hover:text-primary transition-colors"
                 >
                   <Copy size={14} />
                 </button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
-                <Tooltip.Content className="bg-[#1c1c20] text-[#e8e8ed] text-[10px] px-2 py-1 rounded border border-[#232328] shadow-xl" sideOffset={5}>
+                <Tooltip.Content className="bg-elevated text-primary text-[10px] px-2 py-1 rounded border border-default shadow-xl" sideOffset={5}>
                   Copy URL
                 </Tooltip.Content>
               </Tooltip.Portal>
@@ -211,13 +207,13 @@ export default function PreviewTab() {
                   href={previewUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="p-1.5 text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors"
+                  className="p-1.5 text-secondary hover:text-primary transition-colors"
                 >
                   <ExternalLink size={14} />
                 </a>
               </Tooltip.Trigger>
               <Tooltip.Portal>
-                <Tooltip.Content className="bg-[#1c1c20] text-[#e8e8ed] text-[10px] px-2 py-1 rounded border border-[#232328] shadow-xl" sideOffset={5}>
+                <Tooltip.Content className="bg-elevated text-primary text-[10px] px-2 py-1 rounded border border-default shadow-xl" sideOffset={5}>
                   Open in New Tab
                 </Tooltip.Content>
               </Tooltip.Portal>
@@ -225,24 +221,24 @@ export default function PreviewTab() {
           </Tooltip.Provider>
         </div>
 
-        <Separator.Root orientation="vertical" className="w-[1px] h-4 bg-[#232328] mx-1" />
+        <Separator.Root orientation="vertical" className="w-[1px] h-4 bg-default mx-1" />
 
-        <div className="flex items-center bg-[#0a0a0c] rounded-md p-0.5 border border-[#232328]">
+        <div className="flex items-center bg-inset rounded-md p-0.5 border border-default">
           <button 
             onClick={() => setViewport('desktop')}
-            className={cn("p-1 rounded transition-all", viewport === 'desktop' ? "bg-violet-500 text-white" : "text-[#6b6b7a] hover:text-[#e8e8ed]")}
+            className={cn("p-1 rounded transition-all", viewport === 'desktop' ? "bg-accent text-white" : "text-secondary hover:text-primary")}
           >
             <Monitor size={12} />
           </button>
           <button 
             onClick={() => setViewport('tablet')}
-            className={cn("p-1 rounded transition-all", viewport === 'tablet' ? "bg-violet-500 text-white" : "text-[#6b6b7a] hover:text-[#e8e8ed]")}
+            className={cn("p-1 rounded transition-all", viewport === 'tablet' ? "bg-accent text-white" : "text-secondary hover:text-primary")}
           >
             <Tablet size={12} />
           </button>
           <button 
             onClick={() => setViewport('mobile')}
-            className={cn("p-1 rounded transition-all", viewport === 'mobile' ? "bg-violet-500 text-white" : "text-[#6b6b7a] hover:text-[#e8e8ed]")}
+            className={cn("p-1 rounded transition-all", viewport === 'mobile' ? "bg-accent text-white" : "text-secondary hover:text-primary")}
           >
             <Smartphone size={12} />
           </button>
@@ -256,45 +252,45 @@ export default function PreviewTab() {
 
       {/* CONSOLE DRAWER */}
       <div className={cn(
-        "bg-[#0a0a0c] border-t border-[#232328] transition-all duration-300 ease-in-out flex flex-col shrink-0",
+        "bg-page border-t border-default transition-all duration-300 ease-in-out flex flex-col shrink-0",
         isConsoleOpen ? "h-[120px]" : "h-6"
       )}>
         <button 
           onClick={() => setIsConsoleOpen(!isConsoleOpen)}
-          className="h-6 px-3 flex items-center justify-between hover:bg-[#141416] transition-colors group"
+          className="h-6 px-3 flex items-center justify-between hover:bg-surface transition-colors group"
         >
           <div className="flex items-center gap-2">
-            <Terminal size={10} className={cn("transition-colors", isConsoleOpen ? "text-violet-400" : "text-[#6b6b7a]")} />
-            <span className={cn("text-[10px] font-bold uppercase tracking-wider", isConsoleOpen ? "text-[#e8e8ed]" : "text-[#6b6b7a]")}>Console</span>
+            <Terminal size={10} className={cn("transition-colors", isConsoleOpen ? "text-accent" : "text-tertiary")} />
+            <span className={cn("text-[10px] font-bold uppercase tracking-wider", isConsoleOpen ? "text-primary" : "text-tertiary")}>Console</span>
             {consoleLogs.length > 0 && !isConsoleOpen && (
-              <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
             )}
           </div>
           <div className="flex items-center gap-2">
             {isConsoleOpen && (
               <button 
                 onClick={(e) => { e.stopPropagation(); setConsoleLogs([]); }}
-                className="p-1 text-[#6b6b7a] hover:text-red-400 transition-colors"
+                className="p-1 text-tertiary hover:text-error transition-colors"
               >
                 <Trash2 size={10} />
               </button>
             )}
-            {isConsoleOpen ? <ChevronDown size={12} className="text-[#6b6b7a]" /> : <ChevronUp size={12} className="text-[#6b6b7a]" />}
+            {isConsoleOpen ? <ChevronDown size={12} className="text-tertiary" /> : <ChevronUp size={12} className="text-tertiary" />}
           </div>
         </button>
         
         {isConsoleOpen && (
-          <div className="flex-1 overflow-y-auto p-2 font-mono text-[10px] space-y-1 bg-[#050505]">
+          <div className="flex-1 overflow-y-auto p-2 font-mono text-[10px] space-y-1 bg-inset">
             {consoleLogs.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-[#44444d] italic">
+              <div className="h-full flex items-center justify-center text-tertiary italic">
                 No logs to display
               </div>
             ) : (
               consoleLogs.map((log, idx) => (
-                <div key={idx} className="flex gap-2 border-b border-[#232328]/30 pb-1">
-                  <span className="text-[#44444d] shrink-0">{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                <div key={idx} className="flex gap-2 border-b border-default/30 pb-1">
+                  <span className="text-tertiary shrink-0">{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
                   <span className={cn(
-                    log.type === 'error' ? "text-red-400" : log.type === 'warn' ? "text-amber-400" : "text-[#e8e8ed]"
+                    log.type === 'error' ? "text-error" : log.type === 'warn' ? "text-warning" : "text-primary"
                   )}>
                     {log.text}
                   </span>

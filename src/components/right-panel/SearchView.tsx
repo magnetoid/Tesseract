@@ -45,20 +45,20 @@ export default function SearchView() {
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* HEADER */}
-      <div className="h-9 flex items-center px-3 shrink-0 border-b border-[#232328]">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-[#6b6b7a]">Search</span>
+      <div className="h-9 flex items-center px-3 shrink-0 border-b border-subtle">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-secondary">Search</span>
       </div>
 
       {/* INPUT */}
-      <div className="p-3 border-b border-[#232328]">
+      <div className="p-3 border-b border-subtle">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#44444d]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary" />
           <input 
             type="text" 
             placeholder="Search files..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#0a0a0c] border border-[#232328] rounded-lg pl-9 pr-3 py-1.5 text-xs text-[#e8e8ed] outline-none focus:border-violet-500/50 transition-colors"
+            className="w-full bg-page border border-subtle rounded-lg pl-9 pr-3 py-1.5 text-xs text-primary outline-none focus:border-accent/50 transition-colors"
           />
         </div>
       </div>
@@ -66,12 +66,12 @@ export default function SearchView() {
       {/* RESULTS */}
       <div className="flex-1 overflow-y-auto py-2 no-scrollbar">
         {searchQuery.trim().length < 2 ? (
-          <div className="h-full flex flex-col items-center justify-center text-[#44444d] gap-2 px-4 text-center">
+          <div className="h-full flex flex-col items-center justify-center text-tertiary gap-2 px-4 text-center">
             <Search size={24} />
             <p className="text-[10px]">Type at least 2 characters to search</p>
           </div>
         ) : searchResults.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-[#44444d] gap-2 px-4 text-center">
+          <div className="h-full flex flex-col items-center justify-center text-tertiary gap-2 px-4 text-center">
             <p className="text-[10px]">No results found for "{searchQuery}"</p>
           </div>
         ) : (
@@ -80,14 +80,14 @@ export default function SearchView() {
               <div 
                 key={result.id}
                 onClick={() => handleResultClick(result)}
-                className="p-2 hover:bg-[#1c1c20] cursor-pointer rounded-md transition-colors group"
+                className="p-2 hover:bg-elevated cursor-pointer rounded-md transition-colors group"
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <FileCode size={12} className="text-violet-400" />
-                  <span className="text-[11px] text-[#e8e8ed] font-medium truncate">{result.filePath}</span>
-                  <span className="text-[10px] text-[#44444d] ml-auto">Ln {result.line}</span>
+                  <FileCode size={12} className="text-accent-hover" />
+                  <span className="text-[11px] text-primary font-medium truncate">{result.filePath}</span>
+                  <span className="text-[10px] text-tertiary ml-auto">Ln {result.line}</span>
                 </div>
-                <div className="text-[10px] text-[#6b6b7a] font-mono truncate pl-5 group-hover:text-[#e8e8ed] transition-colors">
+                <div className="text-[10px] text-secondary font-mono truncate pl-5 group-hover:text-primary transition-colors">
                   {result.text}
                 </div>
               </div>

@@ -9,7 +9,16 @@ import DatabaseTab from '../tabs/DatabaseTab';
 import SecurityScanTab from '../tabs/SecurityScanTab';
 import IntegrationsTab from '../tabs/IntegrationsTab';
 import AgentSkillsTab from '../tabs/AgentSkillsTab';
-// import SettingsTab from '../tabs/SettingsTab';
+import SecretsTab from '../tabs/SecretsTab';
+import AppStorageTab from '../tabs/AppStorageTab';
+import AuthTab from '../tabs/AuthTab';
+import PublishingTab from '../tabs/PublishingTab';
+import ValidationTab from '../tabs/ValidationTab';
+import GitTab from '../tabs/GitTab';
+import WorkflowsTab from '../tabs/WorkflowsTab';
+import CanvasTab from '../tabs/CanvasTab';
+import AppTestingTab from '../tabs/AppTestingTab';
+import SettingsTab from '../tabs/SettingsTab';
 
 export function CenterWorkArea() {
   const { 
@@ -34,9 +43,19 @@ export function CenterWorkArea() {
       case 'security': return <SecurityScanTab />;
       case 'integrations': return <IntegrationsTab />;
       case 'skills': return <AgentSkillsTab />;
+      case 'secrets': return <SecretsTab />;
+      case 'storage': return <AppStorageTab />;
+      case 'auth': return <AuthTab />;
+      case 'publishing': return <PublishingTab />;
+      case 'validation': return <ValidationTab />;
+      case 'git': return <GitTab />;
+      case 'workflow': return <WorkflowsTab />;
+      case 'canvas': return <CanvasTab />;
+      case 'testing': return <AppTestingTab />;
+      case 'settings': return <SettingsTab />;
       default:
         return (
-          <div className="flex-1 flex items-center justify-center text-[#6b6b7a]">
+          <div className="flex-1 flex items-center justify-center text-secondary">
             {tab.label} Content (Coming Soon)
           </div>
         );
@@ -46,9 +65,9 @@ export function CenterWorkArea() {
   const renderContent = () => {
     if (!activeTab) {
       return (
-        <div className="flex-1 flex flex-col items-center justify-center text-[#6b6b7a] gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-[#141416] border border-[#232328] flex items-center justify-center">
-            <div className="w-8 h-8 bg-[#232328] rounded-lg" />
+        <div className="flex-1 flex flex-col items-center justify-center text-secondary gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-surface border border-default flex items-center justify-center">
+            <div className="w-8 h-8 bg-elevated rounded-lg" />
           </div>
           <p className="text-sm font-medium">Open a tool from the sidebar</p>
         </div>
@@ -66,7 +85,7 @@ export function CenterWorkArea() {
       )}>
         <div 
           style={{ flex: splitRatio }} 
-          className="relative overflow-hidden border-b border-[#232328]"
+          className="relative overflow-hidden border-b border-default"
         >
           {renderTabContent(activeTab)}
         </div>
@@ -74,7 +93,7 @@ export function CenterWorkArea() {
         {/* Resize Handle */}
         <div 
           className={cn(
-            "bg-[#232328] hover:bg-violet-500/50 transition-colors cursor-pointer z-20",
+            "bg-default hover:bg-accent/50 transition-colors cursor-pointer z-20",
             splitDirection === 'vertical' ? "h-1 w-full" : "w-1 h-full"
           )}
           onMouseDown={(e) => {
@@ -106,7 +125,7 @@ export function CenterWorkArea() {
   };
 
   return (
-    <main className="flex-1 bg-[#0a0a0c] flex flex-col min-w-0 overflow-hidden">
+    <main className="flex-1 bg-page flex flex-col min-w-0 overflow-hidden">
       <TabBar />
       <div className="flex-1 relative overflow-hidden">
         {renderContent()}

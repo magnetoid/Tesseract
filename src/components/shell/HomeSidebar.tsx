@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   Home, 
   Grid, 
@@ -10,115 +10,267 @@ import {
   Plus, 
   Download, 
   Lightbulb, 
-  BookOpen 
+  BookOpen,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Check,
+  PlusCircle,
+  Building2,
+  Zap,
+  Users,
+  CreditCard,
+  HelpCircle,
+  LogOut,
+  Star,
+  Clock,
+  Lock
 } from 'lucide-react';
+import * as Tooltip from '@radix-ui/react-tooltip';
 import { cn } from '../../lib/utils';
+import { useLayoutStore } from '../../stores/layoutStore';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { useProjectStore } from '../../stores/projectStore';
+import { UpgradeDialog } from '../shared/UpgradeDialog';
+import { WorkspaceSwitcher } from '../shared/WorkspaceSwitcher';
+import { NotificationBell } from '../shared/NotificationBell';
+import { usePlanGate } from '../../hooks/usePlanGate';
 
 export function HomeSidebar() {
+  const navigate = useNavigate();
+  const { homeSidebarCollapsed, toggleHomeSidebar } = useLayoutStore();
+  const { getActiveWorkspace } = useWorkspaceStore();
+  const { projects } = useProjectStore();
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
+  
+  const { checkFeature } = usePlanGate();
+  const projectGate = checkFeature('create_project');
+
+  const activeWorkspace = getActiveWorkspace();
+  const workspaceProjects = projects.filter(p => p.workspaceId === activeWorkspace?.id);
+
   const navItems = [
     { to: '/', icon: Home, label: 'Home' },
     { to: '/projects', icon: Grid, label: 'Projects' },
-    { to: '/published', icon: Globe, label: 'Published Projects' },
-    { to: '/settings', icon: Settings, label: 'Settings' },
+    { to: '/recent', icon: Clock, label: 'Recent' },
+    { to: '/starred', icon: Star, label: 'Starred' },
+    { to: '/shared', icon: Users, label: 'Shared with me' },
   ];
 
+  const settingsItems = [
+    { to: '/settings', icon: Settings, label: 'Settings' },
+    { to: '/billing', icon: CreditCard, label: 'Billing' },
+    { to: '/help', icon: HelpCircle, label: 'Help & Support' },
+  ];
+
+  const projectLimit = activeWorkspace?.limits.maxProjects || 3;
+  const projectUsage = workspaceProjects.length;
+  const projectProgress = projectLimit === -1 ? 0 : (projectUsage / projectLimit) * 100;
+
+  const tokenLimit = activeWorkspace?.limits.maxTokensPerMonth || 50000;
+  const tokenUsage = activeWorkspace?.usage.tokensUsedThisMonth || 0;
+  const tokenProgress = (tokenUsage / tokenLimit) * 100;
+
+  const handleNewProject = () => {
+    if (!projectGate.allowed) {
+      setUpgradeDialogOpen(true);
+      return;
+    }
+    navigate('/projects?new=true');
+  };
+
   return (
-    <aside className="w-[220px] bg-[#141416] border-r border-[#232328] h-screen flex flex-col fixed left-0 top-0 z-50">
-      {/* Top Section */}
-      <div className="p-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 cursor-pointer hover:bg-[#1c1c20] p-1 rounded-md transition-colors">
-          <div className="w-7 h-7 rounded-full bg-violet-500 flex items-center justify-center text-white text-xs font-bold">
-            M
-          </div>
-          <span className="text-sm font-medium text-[#e8e8ed] truncate">Marko's Workspace</span>
-          <ChevronDown size={14} className="text-[#6b6b7a]" />
+    <Tooltip.Provider delayDuration={200}>
+      <aside 
+        className={cn(
+          "bg-surface border-r border-default h-screen flex flex-col sticky left-0 top-0 z-[60] transition-all duration-300 ease-in-out",
+          homeSidebarCollapsed ? "w-[68px]" : "w-[240px]"
+        )}
+      >
+        {/* Workspace Switcher */}
+        <div className="p-3 border-b border-default">
+          <WorkspaceSwitcher collapsed={homeSidebarCollapsed} />
         </div>
-        <button className="p-1.5 text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#1c1c20] rounded-md transition-colors">
-          <Search size={16} />
-        </button>
-      </div>
 
-      {/* Action Buttons */}
-      <div className="px-3 mt-2 flex flex-col gap-1.5">
-        <button className="flex items-center gap-2 bg-[#1c1c20] border border-[#232328] rounded-lg px-3 py-2 text-sm text-[#e8e8ed] hover:border-[#7c6ff7]/50 transition-colors">
-          <Plus size={16} className="text-violet-500" />
-          <span>Create something new</span>
-        </button>
-        <button className="flex items-center gap-2 bg-[#1c1c20] border border-[#232328] rounded-lg px-3 py-2 text-sm text-[#e8e8ed] hover:border-[#7c6ff7]/50 transition-colors">
-          <Download size={16} className="text-[#6b6b7a]" />
-          <span>Import code or design</span>
-        </button>
-      </div>
+        {/* Action Buttons */}
+        <div className="p-3 flex flex-col gap-2">
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+              <button 
+                onClick={handleNewProject}
+                className={cn(
+                  "flex items-center transition-all rounded-xl group overflow-hidden relative",
+                  homeSidebarCollapsed 
+                    ? "justify-center w-10 h-10 hover:bg-elevated" 
+                    : "gap-3 px-3 py-2.5 bg-accent hover:bg-accent-hover text-white shadow-lg shadow-accent/20",
+                  !projectGate.allowed && !homeSidebarCollapsed && "opacity-80 grayscale-[0.5]"
+                )}
+              >
+                {!projectGate.allowed && (
+                  <div className="absolute top-0 right-0 p-1">
+                    <Lock size={10} className="text-white/60" />
+                  </div>
+                )}
+                <Plus size={18} className={cn("shrink-0", !homeSidebarCollapsed && "group-hover:rotate-90 transition-transform")} />
+                {!homeSidebarCollapsed && <span className="text-sm font-bold truncate">New Project</span>}
+              </button>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content side="right" sideOffset={10} className="bg-elevated text-primary text-xs px-2 py-1 rounded border border-default shadow-xl z-[100] max-w-[200px]">
+                {!projectGate.allowed ? `Upgrade required: ${projectGate.reason}` : "New Project"}
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        </div>
 
-      {/* Navigation */}
-      <nav className="px-2 mt-4 flex flex-col gap-0.5">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) => cn(
-              "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors",
-              isActive 
-                ? "bg-[#1c1c20] text-[#e8e8ed]" 
-                : "text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#1c1c20]"
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto custom-scrollbar">
+          <div className="mb-2 px-3">
+            {!homeSidebarCollapsed && <span className="text-[10px] font-bold text-tertiary uppercase tracking-wider">Workspace</span>}
+          </div>
+          {navItems.map((item) => (
+            <Tooltip.Root key={item.to}>
+              <Tooltip.Trigger asChild>
+                <NavLink
+                  to={item.to}
+                  className={({ isActive }) => cn(
+                    "flex items-center transition-all rounded-xl group",
+                    homeSidebarCollapsed 
+                      ? "justify-center w-10 h-10 hover:bg-elevated" 
+                      : "gap-3 px-3 py-2",
+                    isActive 
+                      ? "bg-accent-muted text-accent" 
+                      : "text-secondary hover:text-primary hover:bg-elevated"
+                  )}
+                >
+                  <item.icon size={18} className="shrink-0" />
+                  {!homeSidebarCollapsed && <span className="text-sm font-medium truncate">{item.label}</span>}
+                </NavLink>
+              </Tooltip.Trigger>
+              {homeSidebarCollapsed && (
+                <Tooltip.Portal>
+                  <Tooltip.Content side="right" sideOffset={10} className="bg-elevated text-primary text-xs px-2 py-1 rounded border border-default shadow-xl z-[100]">
+                    {item.label}
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              )}
+            </Tooltip.Root>
+          ))}
+
+          <div className="py-1">
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <div className={cn(
+                  "flex items-center transition-all rounded-xl group cursor-pointer",
+                  homeSidebarCollapsed 
+                    ? "justify-center w-10 h-10" 
+                    : "gap-3 px-1 py-1"
+                )}>
+                  <NotificationBell className={cn(
+                    "w-full flex items-center transition-all rounded-xl",
+                    homeSidebarCollapsed ? "justify-center h-10" : "gap-3 px-2 py-2"
+                  )} />
+                  {!homeSidebarCollapsed && <span className="text-sm font-medium text-secondary group-hover:text-primary transition-colors">Notifications</span>}
+                </div>
+              </Tooltip.Trigger>
+              {homeSidebarCollapsed && (
+                <Tooltip.Portal>
+                  <Tooltip.Content side="right" sideOffset={10} className="bg-elevated text-primary text-xs px-2 py-1 rounded border border-default shadow-xl z-[100]">
+                    Notifications
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              )}
+            </Tooltip.Root>
+          </div>
+
+          <div className="mt-6 mb-2 px-3">
+            {!homeSidebarCollapsed && <span className="text-[10px] font-bold text-tertiary uppercase tracking-wider">Account</span>}
+          </div>
+          {settingsItems.map((item) => (
+            <Tooltip.Root key={item.to}>
+              <Tooltip.Trigger asChild>
+                <NavLink
+                  to={item.to}
+                  className={({ isActive }) => cn(
+                    "flex items-center transition-all rounded-xl group",
+                    homeSidebarCollapsed 
+                      ? "justify-center w-10 h-10 hover:bg-elevated" 
+                      : "gap-3 px-3 py-2",
+                    isActive 
+                      ? "bg-accent-muted text-accent" 
+                      : "text-secondary hover:text-primary hover:bg-elevated"
+                  )}
+                >
+                  <item.icon size={18} className="shrink-0" />
+                  {!homeSidebarCollapsed && <span className="text-sm font-medium truncate">{item.label}</span>}
+                </NavLink>
+              </Tooltip.Trigger>
+              {homeSidebarCollapsed && (
+                <Tooltip.Portal>
+                  <Tooltip.Content side="right" sideOffset={10} className="bg-elevated text-primary text-xs px-2 py-1 rounded border border-default shadow-xl z-[100]">
+                    {item.label}
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              )}
+            </Tooltip.Root>
+          ))}
+        </nav>
+
+        {/* Bottom Section */}
+        <div className="p-3 border-t border-default space-y-4">
+          {/* Plan Usage */}
+          {!homeSidebarCollapsed && (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                  <span className="text-tertiary">Projects</span>
+                  <span className="text-secondary">{projectUsage} / {projectLimit === -1 ? '∞' : projectLimit}</span>
+                </div>
+                <div className="h-1 bg-inset rounded-full overflow-hidden">
+                  <div 
+                    className={cn("h-full transition-all duration-500", projectProgress > 90 ? "bg-error" : "bg-accent")}
+                    style={{ width: `${Math.min(projectProgress, 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                  <span className="text-tertiary">Tokens</span>
+                  <span className="text-secondary">{(tokenUsage / 1000).toFixed(1)}K / {(tokenLimit / 1000).toFixed(0)}K</span>
+                </div>
+                <div className="h-1 bg-inset rounded-full overflow-hidden">
+                  <div 
+                    className={cn("h-full transition-all duration-500", tokenProgress > 90 ? "bg-error" : "bg-accent")}
+                    style={{ width: `${Math.min(tokenProgress, 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setUpgradeDialogOpen(true)}
+                className="w-full py-2 bg-elevated hover:bg-bg-inset border border-default rounded-xl text-xs font-bold text-primary transition-all flex items-center justify-center gap-2 group"
+              >
+                <Zap size={14} className="text-warning group-hover:scale-110 transition-transform" />
+                Upgrade Plan
+              </button>
+            </div>
+          )}
+
+          {/* Sidebar Toggle */}
+          <button 
+            onClick={toggleHomeSidebar}
+            className={cn(
+              "flex items-center transition-all rounded-xl text-tertiary hover:text-primary hover:bg-elevated",
+              homeSidebarCollapsed ? "justify-center w-10 h-10" : "gap-3 px-3 py-2 w-full"
             )}
           >
-            <item.icon size={18} />
-            <span>{item.label}</span>
-          </NavLink>
-        ))}
-      </nav>
-
-      {/* Bottom Section */}
-      <div className="mt-auto border-t border-[#232328] p-3">
-        <div className="flex flex-col gap-2 mb-4">
-          <a href="#" className="flex items-center gap-2 text-xs text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors">
-            <Lightbulb size={14} />
-            <span>Learn</span>
-          </a>
-          <a href="#" className="flex items-center gap-2 text-xs text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors">
-            <BookOpen size={14} />
-            <span>Documentation</span>
-          </a>
-        </div>
-
-        {/* Plan Card */}
-        <div className="bg-[#0a0a0c] rounded-lg p-3">
-          <span className="text-xs font-medium text-[#6b6b7a]">Your Free Plan</span>
-          <div className="mt-2 flex flex-col gap-2">
-            <div className="space-y-1">
-              <div className="flex justify-between text-[10px] text-[#6b6b7a]">
-                <span>Free Apps</span>
-                <span>3/10 created</span>
-              </div>
-              <div className="h-1 w-full bg-[#1c1c20] rounded-full overflow-hidden">
-                <div className="h-full bg-violet-500 w-[30%]" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between text-[10px] text-[#6b6b7a]">
-                <span>Agent credits</span>
-                <span>12% used</span>
-              </div>
-              <div className="h-1 w-full bg-[#1c1c20] rounded-full overflow-hidden">
-                <div className="h-full bg-violet-500 w-[12%]" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between text-[10px] text-[#6b6b7a]">
-                <span>Cloud credits</span>
-                <span>0% used</span>
-              </div>
-              <div className="h-1 w-full bg-[#1c1c20] rounded-full overflow-hidden">
-                <div className="h-full bg-violet-500 w-0" />
-              </div>
-            </div>
-          </div>
-          <button className="bg-violet-500 hover:bg-violet-400 text-white text-sm font-medium rounded-lg py-2 w-full mt-3 transition-colors">
-            Upgrade to Tesseract Pro
+            {homeSidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+            {!homeSidebarCollapsed && <span className="text-sm font-medium">Collapse</span>}
           </button>
         </div>
-      </div>
-    </aside>
+      </aside>
+
+      <UpgradeDialog open={upgradeDialogOpen} onOpenChange={setUpgradeDialogOpen} />
+    </Tooltip.Provider>
   );
 }

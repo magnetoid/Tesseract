@@ -31,21 +31,21 @@ export function TerminalBlock({ command, output, exitCode, isStreaming }: Termin
     if (lower.includes('error') || lower.includes('failed')) return 'text-red-400';
     if (lower.includes('warning')) return 'text-amber-400';
     if (lower.includes('success') || lower.includes('ready in') || lower.includes('compiled')) return 'text-emerald-400';
-    return 'text-[#e8e8ed]';
+    return 'text-primary';
   };
 
   const displayedOutput = isExpanded ? output : output.slice(-3);
 
   return (
-    <div className="w-full bg-[#0a0a0c] rounded-xl border border-[#232328] overflow-hidden my-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="w-full bg-page rounded-xl border border-subtle overflow-hidden my-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
       {/* Header */}
-      <div className="h-8 bg-[#141416] px-3 flex items-center justify-between border-b border-[#232328]">
+      <div className="h-8 bg-surface px-3 flex items-center justify-between border-b border-subtle">
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="flex items-center gap-1.5">
             <div className={cn("w-1.5 h-1.5 rounded-full", isStreaming ? "bg-amber-500 animate-pulse" : "bg-emerald-500")} />
-            <span className="text-[10px] font-bold text-[#6b6b7a] uppercase tracking-wider">Terminal</span>
+            <span className="text-[10px] font-bold text-secondary uppercase tracking-wider">Terminal</span>
           </div>
-          <span className="text-xs font-mono text-[#e8e8ed] truncate opacity-80">$ {command}</span>
+          <span className="text-xs font-mono text-primary truncate opacity-80">$ {command}</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -61,7 +61,7 @@ export function TerminalBlock({ command, output, exitCode, isStreaming }: Termin
           
           <button 
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors"
+            className="p-1 text-secondary hover:text-primary transition-colors"
             title={isExpanded ? "Collapse" : "Expand"}
           >
             {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -69,7 +69,7 @@ export function TerminalBlock({ command, output, exitCode, isStreaming }: Termin
           
           <button 
             onClick={handleCopy}
-            className="p-1 text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors"
+            className="p-1 text-secondary hover:text-primary transition-colors"
             title="Copy output"
           >
             {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
@@ -92,7 +92,7 @@ export function TerminalBlock({ command, output, exitCode, isStreaming }: Termin
         ))}
         {isStreaming && (
           <div className="flex items-center gap-1 mt-1">
-            <div className="w-1 h-3 bg-violet-500 animate-pulse" />
+            <div className="w-1 h-3 bg-accent animate-pulse" />
           </div>
         )}
       </div>

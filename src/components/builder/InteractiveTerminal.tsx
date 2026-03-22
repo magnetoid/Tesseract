@@ -22,11 +22,11 @@ export function InteractiveTerminal() {
       fontSize: 12,
       fontFamily: '"JetBrains Mono", monospace',
       theme: {
-        background: '#0a0a0c',
-        foreground: '#e8e8ed',
-        cursor: '#7c6ff7',
-        selectionBackground: '#7c6ff744',
-        black: '#141416',
+        background: '#1C1C1E',
+        foreground: '#F0F0F2',
+        cursor: '#7B6AEE',
+        selectionBackground: '#7B6AEE44',
+        black: '#2B2B2E',
         red: '#ff5555',
         green: '#50fa7b',
         yellow: '#f1fa8c',
@@ -153,26 +153,26 @@ export function InteractiveTerminal() {
 
   return (
     <div 
-      className="absolute bottom-0 left-0 right-0 bg-[#0a0a0c] border-t border-[#232328] z-40 flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-300"
+      className="absolute bottom-0 left-0 right-0 bg-page border-t border-subtle z-40 flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-300"
       style={{ height: `${height}px` }}
     >
       {/* Resize Handle */}
       <div 
-        className="h-1 w-full cursor-ns-resize hover:bg-violet-500/50 transition-colors flex items-center justify-center group"
+        className="h-1 w-full cursor-ns-resize hover:bg-accent/50 transition-colors flex items-center justify-center group"
         onMouseDown={handleMouseDown}
       >
-        <div className="w-8 h-1 bg-[#232328] rounded-full group-hover:bg-violet-500/50 transition-colors" />
+        <div className="w-8 h-1 bg-subtle rounded-full group-hover:bg-accent/50 transition-colors" />
       </div>
 
       {/* Header */}
-      <div className="h-9 bg-[#141416] px-4 flex items-center justify-between border-b border-[#232328] shrink-0">
+      <div className="h-9 bg-surface px-4 flex items-center justify-between border-b border-subtle shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-violet-500" />
-          <span className="text-xs font-bold text-[#e8e8ed] tracking-tight">Interactive Terminal</span>
+          <div className="w-2 h-2 rounded-full bg-accent" />
+          <span className="text-xs font-bold text-primary tracking-tight">Interactive Terminal</span>
         </div>
         <button 
           onClick={() => setTerminalOpen(false)}
-          className="p-1 text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#1c1c20] rounded transition-colors"
+          className="p-1 text-secondary hover:text-primary hover:bg-elevated rounded transition-colors"
         >
           <X size={16} />
         </button>

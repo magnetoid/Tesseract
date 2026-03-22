@@ -14,8 +14,8 @@ interface LibraryItem {
 const MOCK_LIBRARY: LibraryItem[] = [
   { id: 'art-1', name: 'Start application', type: 'artifact', icon: <Zap size={14} className="text-emerald-400" />, badge: 'Artifact', description: 'Main entry point for the application' },
   { id: 'art-2', name: 'Build project', type: 'artifact', icon: <Zap size={14} className="text-emerald-400" />, badge: 'Artifact', description: 'Compiles the project for production' },
-  { id: 'temp-1', name: 'Auth Landing', type: 'template', icon: <Layout size={14} className="text-violet-400" />, badge: 'Template', description: 'Modern authentication landing page' },
-  { id: 'temp-2', name: 'Dashboard Grid', type: 'template', icon: <Layout size={14} className="text-violet-400" />, badge: 'Template', description: 'Responsive dashboard layout grid' },
+  { id: 'temp-1', name: 'Auth Landing', type: 'template', icon: <Layout size={14} className="text-accent-hover" />, badge: 'Template', description: 'Modern authentication landing page' },
+  { id: 'temp-2', name: 'Dashboard Grid', type: 'template', icon: <Layout size={14} className="text-accent-hover" />, badge: 'Template', description: 'Responsive dashboard layout grid' },
   { id: 'pkg-1', name: 'lucide-react', type: 'package', icon: <Box size={14} className="text-blue-400" />, badge: 'v0.475.0', description: 'Beautiful & consistent icons' },
   { id: 'pkg-2', name: 'framer-motion', type: 'package', icon: <Box size={14} className="text-blue-400" />, badge: 'v12.4.2', description: 'A production-ready motion library' },
   { id: 'pkg-3', name: 'zustand', type: 'package', icon: <Box size={14} className="text-blue-400" />, badge: 'v5.0.3', description: 'A small, fast and scalable bearbones state-management solution' },
@@ -46,20 +46,20 @@ export default function LibraryView() {
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* HEADER */}
-      <div className="h-9 flex items-center px-3 shrink-0 border-b border-[#232328]">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-[#6b6b7a]">Library</span>
+      <div className="h-9 flex items-center px-3 shrink-0 border-b border-subtle">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-secondary">Library</span>
       </div>
 
       {/* INPUT */}
-      <div className="p-3 border-b border-[#232328]">
+      <div className="p-3 border-b border-subtle">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#44444d]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary" />
           <input 
             type="text" 
             placeholder="Search library..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#0a0a0c] border border-[#232328] rounded-lg pl-9 pr-3 py-1.5 text-xs text-[#e8e8ed] outline-none focus:border-violet-500/50 transition-colors"
+            className="w-full bg-page border border-subtle rounded-lg pl-9 pr-3 py-1.5 text-xs text-primary outline-none focus:border-accent/50 transition-colors"
           />
         </div>
       </div>
@@ -76,13 +76,13 @@ export default function LibraryView() {
             <div key={section.name} className="mb-2">
               <button 
                 onClick={() => toggleSection(section.name)}
-                className="w-full h-7 flex items-center gap-2 px-3 hover:bg-[#1c1c20] transition-colors group"
+                className="w-full h-7 flex items-center gap-2 px-3 hover:bg-elevated transition-colors group"
               >
-                <div className="text-[#44444d]">
+                <div className="text-tertiary">
                   {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#6b6b7a]">{section.name}</span>
-                <span className="text-[10px] text-[#44444d] ml-auto">{items.length}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-secondary">{section.name}</span>
+                <span className="text-[10px] text-tertiary ml-auto">{items.length}</span>
               </button>
 
               {isExpanded && (
@@ -90,18 +90,18 @@ export default function LibraryView() {
                   {items.map((item) => (
                     <div 
                       key={item.id}
-                      className="p-2 hover:bg-[#1c1c20] cursor-pointer rounded-md transition-colors group"
+                      className="p-2 hover:bg-elevated cursor-pointer rounded-md transition-colors group"
                     >
                       <div className="flex items-center gap-2 mb-1">
                         {item.icon}
-                        <span className="text-[11px] text-[#e8e8ed] font-medium truncate">{item.name}</span>
+                        <span className="text-[11px] text-primary font-medium truncate">{item.name}</span>
                         {item.badge && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#232328] text-[#6b6b7a] font-bold uppercase tracking-tighter ml-auto">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-inset text-secondary font-bold uppercase tracking-tighter ml-auto">
                             {item.badge}
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] text-[#44444d] truncate pl-5 group-hover:text-[#6b6b7a] transition-colors">
+                      <div className="text-[10px] text-tertiary truncate pl-5 group-hover:text-secondary transition-colors">
                         {item.description}
                       </div>
                     </div>

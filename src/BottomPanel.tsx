@@ -55,55 +55,55 @@ interface TaskNodeData {
 const getSourceColor = (source: LogSource) => {
   switch (source) {
     case "ORCHESTRATOR":
-      return "text-purple-400";
+      return "text-accent";
     case "EXECUTOR":
-      return "text-blue-400";
+      return "text-info";
     case "REASONER":
-      return "text-amber-400";
+      return "text-warning";
     case "WORKER":
-      return "text-gray-400";
+      return "text-secondary";
     case "ARCHITECT":
-      return "text-cyan-400";
+      return "text-info";
     case "SCOUT":
-      return "text-pink-400";
+      return "text-accent";
     case "SYSTEM":
-      return "text-text-primary";
+      return "text-primary";
     default:
-      return "text-text-muted";
+      return "text-secondary";
   }
 };
 
 const getAgentColor = (role: string) => {
   switch (role) {
     case "orchestrator":
-      return "bg-purple-500";
+      return "bg-accent";
     case "architect":
-      return "bg-cyan-500";
+      return "bg-info";
     case "executor":
-      return "bg-blue-500";
+      return "bg-info";
     case "reasoner":
-      return "bg-amber-500";
+      return "bg-warning";
     case "worker":
-      return "bg-gray-400";
+      return "bg-secondary";
     case "scout":
-      return "bg-pink-500";
+      return "bg-accent";
     default:
-      return "bg-gray-500";
+      return "bg-secondary";
   }
 };
 
 const getStatusIcon = (status: string) => {
   switch (status) {
     case "done":
-      return <CheckCircle2 size={14} className="text-emerald-500" />;
+      return <CheckCircle2 size={14} className="text-success" />;
     case "running":
-      return <PlayCircle size={14} className="text-blue-500" />;
+      return <PlayCircle size={14} className="text-info" />;
     case "error":
-      return <XCircle size={14} className="text-red-500" />;
+      return <XCircle size={14} className="text-error" />;
     case "idle":
     case "pending":
     default:
-      return <CircleDashed size={14} className="text-text-muted" />;
+      return <CircleDashed size={14} className="text-secondary" />;
   }
 };
 
@@ -291,7 +291,7 @@ export default function BottomPanel() {
 
   return (
     <div
-      className="flex flex-col bg-base border-t border-border-dim shrink-0 relative"
+      className="flex flex-col bg-page border-t border-subtle shrink-0 relative"
       style={{ height: `${height}px` }}
     >
       <div
@@ -300,23 +300,23 @@ export default function BottomPanel() {
       />
 
       <Tabs.Root defaultValue="terminal" className="flex flex-col h-full">
-        <div className="flex items-center justify-between border-b border-border-dim bg-surface px-2">
+        <div className="flex items-center justify-between border-b border-subtle bg-surface px-2">
           <Tabs.List className="flex">
             <Tabs.Trigger
               value="terminal"
-              className="px-4 py-2 text-xs font-medium text-text-muted data-[state=active]:text-text-primary data-[state=active]:border-b-2 data-[state=active]:border-accent hover:text-text-primary outline-none flex items-center gap-2 transition-colors"
+              className="px-4 py-2 text-xs font-medium text-secondary data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-accent hover:text-primary outline-none flex items-center gap-2 transition-colors"
             >
               <Terminal size={14} /> Terminal
             </Tabs.Trigger>
             <Tabs.Trigger
               value="tasks"
-              className="px-4 py-2 text-xs font-medium text-text-muted data-[state=active]:text-text-primary data-[state=active]:border-b-2 data-[state=active]:border-accent hover:text-text-primary outline-none flex items-center gap-2 transition-colors"
+              className="px-4 py-2 text-xs font-medium text-secondary data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-accent hover:text-primary outline-none flex items-center gap-2 transition-colors"
             >
               <ListTree size={14} /> Task Tree
             </Tabs.Trigger>
             <Tabs.Trigger
               value="deploys"
-              className="px-4 py-2 text-xs font-medium text-text-muted data-[state=active]:text-text-primary data-[state=active]:border-b-2 data-[state=active]:border-accent hover:text-text-primary outline-none flex items-center gap-2 transition-colors"
+              className="px-4 py-2 text-xs font-medium text-secondary data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-accent hover:text-primary outline-none flex items-center gap-2 transition-colors"
             >
               <Rocket size={14} /> Deploys
             </Tabs.Trigger>
@@ -383,8 +383,8 @@ export default function BottomPanel() {
             </ScrollArea.Scrollbar>
           </ScrollArea.Root>
 
-          <div className="flex items-center px-3 py-2 border-t border-border-dim/50 bg-base shrink-0">
-            <span className="text-blue-400 font-mono text-[13px] font-bold mr-2 select-none">
+          <div className="flex items-center px-3 py-2 border-t border-subtle/50 bg-page shrink-0">
+            <span className="text-info font-mono text-[13px] font-bold mr-2 select-none">
               {">_"}
             </span>
             <input
@@ -393,7 +393,7 @@ export default function BottomPanel() {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleTerminalSubmit}
               placeholder="Send command to Executor..."
-              className="flex-1 bg-transparent border-none outline-none text-[13px] font-mono text-text-primary placeholder:text-text-muted/50"
+              className="flex-1 bg-transparent border-none outline-none text-[13px] font-mono text-primary placeholder:text-secondary/50"
               spellCheck={false}
               autoComplete="off"
             />
@@ -433,7 +433,7 @@ export default function BottomPanel() {
               <div className="p-4">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="text-[#6b6b7a] border-b border-[#2a2a30]">
+                    <tr className="text-secondary border-b border-subtle">
                       <th className="pb-2 font-medium px-2">Status</th>
                       <th className="pb-2 font-medium px-2">Target</th>
                       <th className="pb-2 font-medium px-2">Duration</th>
@@ -442,41 +442,41 @@ export default function BottomPanel() {
                       <th className="pb-2 font-medium px-2 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#2a2a30]">
+                  <tbody className="divide-y divide-subtle">
                     {deployHistory.map((deploy, index) => (
                       <React.Fragment key={deploy.id}>
                         <tr className={cn(
-                          "group hover:bg-[#1c1c20] transition-colors",
-                          deploy.status === 'error' ? "bg-red-500/5" : ""
+                          "group hover:bg-surface transition-colors",
+                          deploy.status === 'error' ? "bg-error/5" : ""
                         )}>
                           <td className="py-3 px-2">
                             <div className="flex items-center gap-2">
                               {deploy.status === 'success' ? (
-                                <CheckCircle2 size={14} className="text-emerald-500" />
+                                <CheckCircle2 size={14} className="text-success" />
                               ) : deploy.status === 'building' ? (
-                                <CircleDashed size={14} className="text-amber-500 animate-spin" />
+                                <CircleDashed size={14} className="text-warning animate-spin" />
                               ) : (
-                                <XCircle size={14} className="text-red-500" />
+                                <XCircle size={14} className="text-error" />
                               )}
                               {index === 0 && deploy.status === 'success' && (
-                                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">LIVE</span>
+                                <span className="px-1.5 py-0.5 rounded-full bg-success/10 text-success text-[10px] font-bold uppercase tracking-wider">LIVE</span>
                               )}
                             </div>
                           </td>
                           <td className="py-3 px-2">
                             <div className="flex flex-col">
-                              <span className="text-[#e8e8ed] font-medium">{deploy.target}</span>
-                              <span className="text-[#6b6b7a] text-[10px]">{deploy.environment}</span>
+                              <span className="text-primary font-medium">{deploy.target}</span>
+                              <span className="text-secondary text-[10px]">{deploy.environment}</span>
                             </div>
                           </td>
-                          <td className="py-3 px-2 text-[#6b6b7a] font-mono">{deploy.duration}</td>
+                          <td className="py-3 px-2 text-secondary font-mono">{deploy.duration}</td>
                           <td className="py-3 px-2">
-                            <div className="flex items-center gap-1 text-[#6b6b7a] font-mono">
+                            <div className="flex items-center gap-1 text-secondary font-mono">
                               <Hash size={10} />
                               {deploy.commit}
                             </div>
                           </td>
-                          <td className="py-3 px-2 text-[#6b6b7a]">{deploy.timestamp}</td>
+                          <td className="py-3 px-2 text-secondary">{deploy.timestamp}</td>
                           <td className="py-3 px-2 text-right">
                             <div className="flex items-center justify-end gap-1">
                               {deploy.url && (
@@ -484,7 +484,7 @@ export default function BottomPanel() {
                                   href={deploy.url} 
                                   target="_blank" 
                                   rel="noopener noreferrer"
-                                  className="p-1.5 text-[#6b6b7a] hover:text-[#e8e8ed] rounded hover:bg-[#2a2a30] transition-colors"
+                                  className="p-1.5 text-secondary hover:text-primary rounded hover:bg-elevated transition-colors"
                                   title="Open URL"
                                 >
                                   <ExternalLink size={14} />
@@ -494,7 +494,7 @@ export default function BottomPanel() {
                                 onClick={() => setExpandedDeploy(expandedDeploy === deploy.id ? null : deploy.id)}
                                 className={cn(
                                   "p-1.5 rounded transition-colors",
-                                  expandedDeploy === deploy.id ? "bg-violet-500/20 text-violet-400" : "text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#2a2a30]"
+                                  expandedDeploy === deploy.id ? "bg-accent/20 text-accent" : "text-secondary hover:text-primary hover:bg-elevated"
                                 )}
                                 title="View Logs"
                               >
@@ -504,7 +504,7 @@ export default function BottomPanel() {
                               <AlertDialog.Root>
                                 <AlertDialog.Trigger asChild>
                                   <button 
-                                    className="p-1.5 text-[#6b6b7a] hover:text-amber-400 rounded hover:bg-[#2a2a30] transition-colors"
+                                    className="p-1.5 text-secondary hover:text-warning rounded hover:bg-elevated transition-colors"
                                     title="Rollback"
                                   >
                                     <RotateCcw size={14} />
@@ -512,19 +512,19 @@ export default function BottomPanel() {
                                 </AlertDialog.Trigger>
                                 <AlertDialog.Portal>
                                   <AlertDialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" />
-                                  <AlertDialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-[#1c1c20] border border-[#2a2a30] rounded-xl p-6 shadow-2xl z-[101]">
-                                    <AlertDialog.Title className="text-[#e8e8ed] font-bold text-lg mb-2">Confirm Rollback</AlertDialog.Title>
-                                    <AlertDialog.Description className="text-[#6b6b7a] text-sm mb-6">
-                                      Are you sure you want to rollback to deployment <span className="text-[#e8e8ed] font-mono">{deploy.commit}</span>? This will replace the current live version.
+                                  <AlertDialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-page border border-subtle rounded-xl p-6 shadow-2xl z-[101]">
+                                    <AlertDialog.Title className="text-primary font-bold text-lg mb-2">Confirm Rollback</AlertDialog.Title>
+                                    <AlertDialog.Description className="text-secondary text-sm mb-6">
+                                      Are you sure you want to rollback to deployment <span className="text-primary font-mono">{deploy.commit}</span>? This will replace the current live version.
                                     </AlertDialog.Description>
                                     <div className="flex justify-end gap-3">
                                       <AlertDialog.Cancel asChild>
-                                        <button className="px-4 py-2 text-[#6b6b7a] hover:text-[#e8e8ed] font-medium transition-colors">Cancel</button>
+                                        <button className="px-4 py-2 text-secondary hover:text-primary font-medium transition-colors">Cancel</button>
                                       </AlertDialog.Cancel>
                                       <AlertDialog.Action asChild>
                                         <button 
                                           onClick={() => rollbackDeploy(deploy.id)}
-                                          className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white font-bold rounded-lg transition-all"
+                                          className="px-4 py-2 bg-warning hover:bg-warning/80 text-white font-bold rounded-lg transition-all"
                                         >
                                           Confirm Rollback
                                         </button>
@@ -538,14 +538,14 @@ export default function BottomPanel() {
                         </tr>
                         {expandedDeploy === deploy.id && (
                           <tr>
-                            <td colSpan={6} className="bg-[#0d0d0f] p-4 border-x border-b border-[#2a2a30]">
+                            <td colSpan={6} className="bg-inset p-4 border-x border-b border-subtle">
                               <div className="font-mono text-[10px] leading-relaxed space-y-1">
                                 {deploy.logs.map((log, i) => (
                                   <div key={i} className={cn(
-                                    log.startsWith('→') ? "text-[#e8e8ed]" : 
-                                    log.startsWith('  ✓') || log.startsWith('✅') ? "text-emerald-400" :
-                                    log.includes('error') ? "text-red-400" :
-                                    "text-[#6b6b7a]"
+                                    log.startsWith('→') ? "text-primary" : 
+                                    log.startsWith('  ✓') || log.startsWith('✅') ? "text-success" :
+                                    log.includes('error') ? "text-error" :
+                                    "text-secondary"
                                   )}>
                                     {log}
                                   </div>

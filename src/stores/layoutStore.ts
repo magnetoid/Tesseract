@@ -9,10 +9,19 @@ import {
   Puzzle, 
   Sparkles,
   Settings,
+  Lock as LockIcon,
+  HardDrive,
+  UserCheck,
+  Rocket,
+  CheckCircle,
+  GitBranch,
+  Workflow,
+  Frame,
+  MonitorPlay,
   LucideIcon
 } from 'lucide-react';
 
-export type TabType = 'preview' | 'code' | 'terminal' | 'database' | 'security' | 'integrations' | 'skills' | 'settings';
+export type TabType = 'preview' | 'code' | 'terminal' | 'database' | 'security' | 'integrations' | 'skills' | 'settings' | 'secrets' | 'storage' | 'auth' | 'publishing' | 'validation' | 'git' | 'workflow' | 'canvas' | 'testing';
 
 export interface Tab {
   id: string;
@@ -32,6 +41,7 @@ interface LayoutState {
   splitRatio: number;
   commandPaletteOpen: boolean;
   quickOpenOpen: boolean;
+  homeSidebarCollapsed: boolean;
   
   // Actions
   toggleLeftPanel: () => void;
@@ -46,6 +56,8 @@ interface LayoutState {
   reorderTabs: (tabs: Tab[]) => void;
   setCommandPalette: (open: boolean) => void;
   setQuickOpen: (open: boolean) => void;
+  setHomeSidebarCollapsed: (collapsed: boolean) => void;
+  toggleHomeSidebar: () => void;
 }
 
 export const TAB_CONFIG: Record<TabType, { label: string; icon: LucideIcon; closable: boolean }> = {
@@ -57,6 +69,15 @@ export const TAB_CONFIG: Record<TabType, { label: string; icon: LucideIcon; clos
   integrations: { label: 'Integrations', icon: Puzzle, closable: true },
   skills: { label: 'Agent Skills', icon: Sparkles, closable: true },
   settings: { label: 'Settings', icon: Settings, closable: true },
+  secrets: { label: 'Secrets', icon: LockIcon, closable: true },
+  storage: { label: 'App Storage', icon: HardDrive, closable: true },
+  auth: { label: 'Authentication', icon: UserCheck, closable: true },
+  publishing: { label: 'Publishing', icon: Rocket, closable: true },
+  validation: { label: 'Validation', icon: CheckCircle, closable: true },
+  git: { label: 'Git', icon: GitBranch, closable: true },
+  workflow: { label: 'Workflows', icon: Workflow, closable: true },
+  canvas: { label: 'Canvas', icon: Frame, closable: true },
+  testing: { label: 'App Testing', icon: MonitorPlay, closable: true },
 };
 
 export const useLayoutStore = create<LayoutState>()(
@@ -74,6 +95,7 @@ export const useLayoutStore = create<LayoutState>()(
       splitRatio: 0.5,
       commandPaletteOpen: false,
       quickOpenOpen: false,
+      homeSidebarCollapsed: true,
 
       toggleLeftPanel: () => set((state) => ({ leftPanelOpen: !state.leftPanelOpen })),
       toggleRightPanel: () => set((state) => ({ rightPanelOpen: !state.rightPanelOpen })),
@@ -132,6 +154,8 @@ export const useLayoutStore = create<LayoutState>()(
       reorderTabs: (tabs) => set({ centerTabs: tabs }),
       setCommandPalette: (open) => set({ commandPaletteOpen: open }),
       setQuickOpen: (open) => set({ quickOpenOpen: open }),
+      setHomeSidebarCollapsed: (collapsed) => set({ homeSidebarCollapsed: collapsed }),
+      toggleHomeSidebar: () => set((state) => ({ homeSidebarCollapsed: !state.homeSidebarCollapsed })),
     }),
     {
       name: 'tesseract-layout-storage',

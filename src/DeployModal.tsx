@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from './useAppStore';
 import { useAuthStore } from './stores/authStore';
+import { useActiveWorkspace } from './stores/workspaceStore';
 import { cn } from './lib/utils';
 
 interface DeployModalProps {
@@ -48,6 +49,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ open, onOpenChange }) 
   const deployLogs = useAppStore(state => state.deployLogs);
   const startDeploy = useAppStore(state => state.startDeploy);
   const { user } = useAuthStore();
+  const activeWorkspace = useActiveWorkspace();
 
   const handleDeploy = async () => {
     if (!target) return;
@@ -271,7 +273,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ open, onOpenChange }) 
                     />
                     <button 
                       onClick={() => {
-                        if (user?.plan === 'free') {
+                        if (activeWorkspace?.plan === 'free') {
                           alert('Upgrade to Pro to add custom domains');
                           return;
                         }

@@ -37,20 +37,20 @@ export function DatabasePanel() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0d0d0f] border-l border-[#2a2a30] animate-in slide-in-from-right duration-300">
+    <div className="flex flex-col h-full bg-page border-l border-default animate-in slide-in-from-right duration-300">
       {/* Header */}
-      <div className="h-12 border-b border-[#2a2a30] flex items-center justify-between px-4 bg-[#141416]">
+      <div className="h-12 border-b border-default flex items-center justify-between px-4 bg-surface">
         <div className="flex items-center gap-2">
-          <Database size={16} className="text-violet-400" />
-          <span className="text-sm font-bold text-[#e8e8ed]">Supabase Database</span>
+          <Database size={16} className="text-accent-hover" />
+          <span className="text-sm font-bold text-primary">Supabase Database</span>
         </div>
         
-        <div className="flex items-center gap-1 bg-[#0d0d0f] p-1 rounded-md border border-[#2a2a30]">
+        <div className="flex items-center gap-1 bg-page p-1 rounded-md border border-default">
           <button 
             onClick={() => setView('tables')}
             className={cn(
               "px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-all",
-              view === 'tables' ? "bg-violet-500/20 text-violet-400" : "text-[#6b6b7a] hover:text-[#e8e8ed]"
+              view === 'tables' ? "bg-accent/20 text-accent-hover" : "text-secondary hover:text-primary"
             )}
           >
             Tables
@@ -59,7 +59,7 @@ export function DatabasePanel() {
             onClick={() => setView('sql')}
             className={cn(
               "px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-all",
-              view === 'sql' ? "bg-violet-500/20 text-violet-400" : "text-[#6b6b7a] hover:text-[#e8e8ed]"
+              view === 'sql' ? "bg-accent/20 text-accent-hover" : "text-secondary hover:text-primary"
             )}
           >
             SQL Editor
@@ -68,7 +68,7 @@ export function DatabasePanel() {
             onClick={() => setView('schema')}
             className={cn(
               "px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-all",
-              view === 'schema' ? "bg-violet-500/20 text-violet-400" : "text-[#6b6b7a] hover:text-[#e8e8ed]"
+              view === 'schema' ? "bg-accent/20 text-accent-hover" : "text-secondary hover:text-primary"
             )}
           >
             Schema
@@ -77,7 +77,7 @@ export function DatabasePanel() {
 
         <button 
           onClick={() => setDatabaseOpen(false)}
-          className="p-1.5 text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#1c1c20] rounded-md transition-colors"
+          className="p-1.5 text-secondary hover:text-primary hover:bg-elevated rounded-md transition-colors"
         >
           <X size={16} />
         </button>
@@ -88,7 +88,7 @@ export function DatabasePanel() {
         {view === 'tables' && (
           <>
             {/* Table Tabs */}
-            <div className="flex items-center gap-1 px-2 pt-2 bg-[#141416] border-b border-[#2a2a30] overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-1 px-2 pt-2 bg-surface border-b border-default overflow-x-auto no-scrollbar">
               {tables.map(table => (
                 <button
                   key={table.id}
@@ -96,8 +96,8 @@ export function DatabasePanel() {
                   className={cn(
                     "px-3 py-1.5 text-xs font-medium rounded-t-md border-t border-x transition-all flex items-center gap-2 shrink-0",
                     activeTableId === table.id 
-                      ? "bg-[#0d0d0f] border-[#2a2a30] text-violet-400" 
-                      : "bg-transparent border-transparent text-[#6b6b7a] hover:text-[#e8e8ed]"
+                      ? "bg-page border-default text-accent-hover" 
+                      : "bg-transparent border-transparent text-secondary hover:text-primary"
                   )}
                 >
                   <TableIcon size={12} />
@@ -110,37 +110,37 @@ export function DatabasePanel() {
             <div className="flex-1 overflow-hidden flex flex-col">
               <ScrollArea.Root className="flex-1 overflow-hidden">
                 <ScrollArea.Viewport className="w-full h-full">
-                  <table className="w-full border-collapse text-xs text-[#e8e8ed]">
-                    <thead className="sticky top-0 bg-[#1c1c20] z-10 shadow-sm">
+                  <table className="w-full border-collapse text-xs text-primary">
+                    <thead className="sticky top-0 bg-elevated z-10 shadow-sm">
                       <tr>
                         {activeTable.columns.map(col => (
-                          <th key={col.name} className="px-4 py-2 text-left border-b border-[#2a2a30] font-mono text-[10px] text-[#6b6b7a] uppercase tracking-wider">
+                          <th key={col.name} className="px-4 py-2 text-left border-b border-default font-mono text-[10px] text-secondary uppercase tracking-wider">
                             <div className="flex flex-col">
                               <span>{col.name}</span>
                               <span className="text-[9px] lowercase opacity-50 font-normal">{col.type}</span>
                             </div>
                           </th>
                         ))}
-                        <th className="w-10 border-b border-[#2a2a30]"></th>
+                        <th className="w-10 border-b border-default"></th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#232328]">
+                    <tbody className="divide-y divide-subtle">
                       {activeTable.rows.map((row, rowIndex) => (
-                        <tr key={rowIndex} className="hover:bg-[#141416] group transition-colors">
+                        <tr key={rowIndex} className="hover:bg-surface group transition-colors">
                           {activeTable.columns.map(col => (
-                            <td key={col.name} className="px-4 py-2 border-r border-[#232328]/30">
+                            <td key={col.name} className="px-4 py-2 border-r border-subtle/30">
                               <input 
                                 type="text"
                                 value={row[col.name]}
                                 onChange={(e) => updateCell(activeTable.id, rowIndex, col.name, e.target.value)}
-                                className="bg-transparent border-none outline-none w-full focus:text-violet-400 transition-colors"
+                                className="bg-transparent border-none outline-none w-full focus:text-accent-hover transition-colors"
                               />
                             </td>
                           ))}
                           <td className="px-2 text-center">
                             <button 
                               onClick={() => deleteRow(activeTable.id, rowIndex)}
-                              className="p-1 text-[#6b6b7a] hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                              className="p-1 text-secondary hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                             >
                               <Trash2 size={12} />
                             </button>
@@ -150,19 +150,19 @@ export function DatabasePanel() {
                     </tbody>
                   </table>
                 </ScrollArea.Viewport>
-                <ScrollArea.Scrollbar orientation="vertical" className="flex select-none touch-none p-0.5 bg-transparent hover:bg-[#1c1c20] w-2.5 transition-colors">
-                  <ScrollArea.Thumb className="flex-1 bg-[#2a2a30] rounded-[10px]" />
+                <ScrollArea.Scrollbar orientation="vertical" className="flex select-none touch-none p-0.5 bg-transparent hover:bg-elevated w-2.5 transition-colors">
+                  <ScrollArea.Thumb className="flex-1 bg-default rounded-[10px]" />
                 </ScrollArea.Scrollbar>
               </ScrollArea.Root>
 
               {/* Table Footer */}
-              <div className="h-10 border-t border-[#2a2a30] bg-[#141416] px-4 flex items-center justify-between shrink-0">
-                <div className="text-[10px] text-[#6b6b7a] font-medium uppercase tracking-wider">
+              <div className="h-10 border-t border-default bg-surface px-4 flex items-center justify-between shrink-0">
+                <div className="text-[10px] text-secondary font-medium uppercase tracking-wider">
                   {activeTable.rows.length} rows
                 </div>
                 <button 
                   onClick={() => addRow(activeTable.id, {})}
-                  className="flex items-center gap-1.5 px-2 py-1 bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 text-[10px] font-bold uppercase tracking-wider rounded transition-colors"
+                  className="flex items-center gap-1.5 px-2 py-1 bg-accent/10 text-accent-hover hover:bg-accent/20 text-[10px] font-bold uppercase tracking-wider rounded transition-colors"
                 >
                   <Plus size={12} />
                   Add Row
@@ -174,7 +174,7 @@ export function DatabasePanel() {
 
         {view === 'sql' && (
           <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex-1 border-b border-[#2a2a30]">
+            <div className="flex-1 border-b border-default">
               <Editor
                 height="100%"
                 defaultLanguage="sql"
@@ -193,22 +193,22 @@ export function DatabasePanel() {
               />
             </div>
             
-            <div className="h-12 bg-[#141416] border-b border-[#2a2a30] px-4 flex items-center justify-between shrink-0">
+            <div className="h-12 bg-surface border-b border-default px-4 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-4">
                 <button 
                   onClick={handleRunQuery}
                   disabled={isExecuting}
-                  className="flex items-center gap-2 px-4 py-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold uppercase tracking-wider rounded-md shadow-lg transition-all disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-bold uppercase tracking-wider rounded-md shadow-lg transition-all disabled:opacity-50"
                 >
                   {isExecuting ? <Play size={14} className="animate-spin" /> : <Play size={14} fill="currentColor" />}
                   Run Query
                 </button>
                 
-                <div className="flex items-center gap-2 text-[10px] text-[#6b6b7a] font-bold uppercase tracking-widest">
+                <div className="flex items-center gap-2 text-[10px] text-secondary font-bold uppercase tracking-widest">
                   <History size={12} />
                   History
                   <select 
-                    className="bg-transparent border-none outline-none text-violet-400 cursor-pointer"
+                    className="bg-transparent border-none outline-none text-accent-hover cursor-pointer"
                     onChange={(e) => setSqlQuery(e.target.value)}
                   >
                     <option value="">Recent...</option>
@@ -220,8 +220,8 @@ export function DatabasePanel() {
               </div>
             </div>
 
-            <div className="flex-1 bg-[#0a0a0c] overflow-hidden flex flex-col">
-              <div className="px-4 py-2 border-b border-[#232328] text-[10px] font-bold text-[#6b6b7a] uppercase tracking-widest">
+            <div className="flex-1 bg-page overflow-hidden flex flex-col">
+              <div className="px-4 py-2 border-b border-subtle text-[10px] font-bold text-secondary uppercase tracking-widest">
                 Results
               </div>
               <ScrollArea.Root className="flex-1 overflow-hidden">
@@ -231,7 +231,7 @@ export function DatabasePanel() {
                       <thead>
                         <tr>
                           {Object.keys(queryResult[0] || {}).map(key => (
-                            <th key={key} className="pb-2 text-[#6b6b7a] font-medium border-b border-[#232328] pr-4">{key}</th>
+                            <th key={key} className="pb-2 text-secondary font-medium border-b border-subtle pr-4">{key}</th>
                           ))}
                         </tr>
                       </thead>
@@ -239,14 +239,14 @@ export function DatabasePanel() {
                         {queryResult.map((row, i) => (
                           <tr key={i}>
                             {Object.values(row).map((val: any, j) => (
-                              <td key={j} className="py-2 text-[#e8e8ed] border-b border-[#232328]/50 pr-4">{String(val)}</td>
+                              <td key={j} className="py-2 text-primary border-b border-subtle/50 pr-4">{String(val)}</td>
                             ))}
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-[#6b6b7a] gap-2 opacity-50">
+                    <div className="h-full flex flex-col items-center justify-center text-secondary gap-2 opacity-50">
                       <Code size={32} strokeWidth={1} />
                       <p className="text-xs">Run a query to see results</p>
                     </div>
@@ -262,22 +262,22 @@ export function DatabasePanel() {
             <ScrollArea.Viewport className="w-full h-full p-6">
               <div className="flex flex-col gap-8">
                 {tables.map(table => (
-                  <div key={table.id} className="bg-[#141416] rounded-xl border border-[#232328] overflow-hidden shadow-sm">
-                    <div className="px-4 py-3 bg-[#1c1c20] border-b border-[#232328] flex items-center justify-between">
+                  <div key={table.id} className="bg-surface rounded-xl border border-subtle overflow-hidden shadow-sm">
+                    <div className="px-4 py-3 bg-elevated border-b border-subtle flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <TableIcon size={14} className="text-violet-400" />
-                        <span className="text-sm font-bold text-[#e8e8ed]">{table.name}</span>
+                        <TableIcon size={14} className="text-accent-hover" />
+                        <span className="text-sm font-bold text-primary">{table.name}</span>
                       </div>
-                      <div className="text-[10px] text-[#6b6b7a] font-medium uppercase tracking-wider">
+                      <div className="text-[10px] text-secondary font-medium uppercase tracking-wider">
                         {table.columns.length} columns
                       </div>
                     </div>
                     <div className="p-4 flex flex-col gap-2">
                       {table.columns.map(col => (
-                        <div key={col.name} className="flex items-center justify-between py-1.5 border-b border-[#232328]/50 last:border-0">
+                        <div key={col.name} className="flex items-center justify-between py-1.5 border-b border-subtle/50 last:border-0">
                           <div className="flex items-center gap-3">
-                            <span className="text-xs font-mono text-[#e8e8ed]">{col.name}</span>
-                            <span className="text-[10px] text-[#6b6b7a] bg-[#0d0d0f] px-1.5 py-0.5 rounded border border-[#232328]">{col.type}</span>
+                            <span className="text-xs font-mono text-primary">{col.name}</span>
+                            <span className="text-[10px] text-secondary bg-page px-1.5 py-0.5 rounded border border-subtle">{col.type}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             {col.isPK && <span className="text-[9px] font-black text-amber-400 bg-amber-500/10 px-1 rounded border border-amber-500/20">PK</span>}
@@ -291,7 +291,7 @@ export function DatabasePanel() {
                   </div>
                 ))}
                 
-                <button className="w-full py-4 border-2 border-dashed border-[#232328] rounded-xl text-[#6b6b7a] hover:text-violet-400 hover:border-violet-500/50 hover:bg-violet-500/5 transition-all flex items-center justify-center gap-2 text-sm font-medium">
+                <button className="w-full py-4 border-2 border-dashed border-subtle rounded-xl text-secondary hover:text-accent-hover hover:border-accent/50 hover:bg-accent/5 transition-all flex items-center justify-center gap-2 text-sm font-medium">
                   <Plus size={16} />
                   Add New Table
                 </button>

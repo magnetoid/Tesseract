@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useWorkspaceStore } from './workspaceStore';
 
 export interface Project {
   id: string;
+  workspaceId: string;
   name: string;
   description: string;
   lastEdited: string;
@@ -21,18 +23,21 @@ export interface Project {
 interface ProjectState {
   projects: Project[];
   addProject: (project: Project) => void;
-  createProject: (project: Partial<Project>) => string;
+  createProject: (projectData: Partial<Project>, workspaceId: string) => string;
   deleteProject: (id: string) => void;
   updateProject: (id: string, updates: Partial<Project>) => void;
   duplicateProject: (id: string) => void;
   archiveProject: (id: string) => void;
+  getProjectsByWorkspace: (workspaceId: string) => Project[];
+  clearWorkspaceProjects: (workspaceId: string) => void;
 }
 
 const MOCK_PROJECTS: Project[] = [
   {
     id: '1',
-    name: 'Tesseract Landing',
-    description: 'The main landing page for Tesseract platform.',
+    workspaceId: 'ws-1',
+    name: 'Torsor Landing',
+    description: 'The main landing page for Torsor platform.',
     lastEdited: '2h ago',
     lastModified: '2h ago',
     type: 'website',
@@ -45,6 +50,7 @@ const MOCK_PROJECTS: Project[] = [
   },
   {
     id: '2',
+    workspaceId: 'ws-1',
     name: 'Fitness Tracker',
     description: 'Mobile-first fitness tracking application.',
     lastEdited: '5h ago',
@@ -58,6 +64,7 @@ const MOCK_PROJECTS: Project[] = [
   },
   {
     id: '3',
+    workspaceId: 'ws-1',
     name: 'Sales Dashboard',
     description: 'Internal dashboard for retail sales tracking.',
     lastEdited: '1d ago',
@@ -73,6 +80,7 @@ const MOCK_PROJECTS: Project[] = [
   },
   {
     id: '4',
+    workspaceId: 'ws-2',
     name: 'AI Image Gen',
     description: 'A simple wrapper around Stable Diffusion.',
     lastEdited: '3d ago',
@@ -88,13 +96,14 @@ const MOCK_PROJECTS: Project[] = [
 
 export const useProjectStore = create<ProjectState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       projects: MOCK_PROJECTS,
       addProject: (project) => set((state) => ({ projects: [project, ...state.projects] })),
-      createProject: (projectData) => {
+      createProject: (projectData, workspaceId) => {
         const id = Math.random().toString(36).substring(7);
         const newProject: Project = {
           id,
+          workspaceId,
           name: projectData.name || 'Untitled Project',
           description: projectData.description || '',
           lastEdited: 'Just now',
@@ -118,9 +127,23 @@ export const useProjectStore = create<ProjectState>()(
       archiveProject: (id) => set((state) => ({
         projects: state.projects.map((p) => p.id === id ? { ...p, isArchived: true } : p)
       })),
+      getProjectsByWorkspace: (workspaceId) => {
+        return get().projects.filter(p => p.workspaceId === workspaceId && !p.isArchived);
+      },
+      clearWorkspaceProjects: (workspaceId) => {
+        set((state) => ({ projects: state.projects.filter(p => p.workspaceId !== workspaceId) }));
+      },
     }),
     {
-      name: 'tesseract-projects',
+      name: 'torsor-projects',
     }
   )
 );
+
+// Computed Selectors
+export const useActiveProjects = () => {
+  const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
+  const projects = useProjectStore((state) => state.projects);
+  return projects.filter(p => p.workspaceId === activeWorkspaceId && !p.isArchived);
+};
+

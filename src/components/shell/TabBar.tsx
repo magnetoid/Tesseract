@@ -14,7 +14,16 @@ import {
   Sparkles, 
   Settings,
   Split,
-  Layout
+  Layout,
+  Lock as LockIcon,
+  HardDrive,
+  UserCheck,
+  Rocket,
+  CheckCircle,
+  GitBranch,
+  Workflow,
+  Frame,
+  MonitorPlay
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useLayoutStore, Tab, TabType, TAB_CONFIG } from '../../stores/layoutStore';
@@ -45,7 +54,7 @@ export function TabBar() {
   };
 
   return (
-    <div className="h-9 bg-[#141416] border-b border-[#232328] flex items-center overflow-x-auto no-scrollbar shrink-0">
+    <div className="h-9 bg-surface border-b border-default flex items-center overflow-x-auto no-scrollbar shrink-0">
       <Reorder.Group 
         axis="x" 
         values={centerTabs} 
@@ -69,22 +78,22 @@ export function TabBar() {
                     <button
                       onClick={() => setActiveTab(tab.id)}
                       className={cn(
-                        "h-full px-3 flex items-center gap-2 text-xs font-medium transition-all border-r border-[#232328] relative group shrink-0 outline-none",
+                        "h-full px-3 flex items-center gap-2 text-xs font-medium transition-all border-r border-default relative group shrink-0 outline-none",
                         activeTabId === tab.id 
-                          ? "bg-[#0a0a0c] text-[#e8e8ed]" 
-                          : "text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#1c1c20]",
-                        draggedTabId === tab.id && "opacity-50 scale-95 z-50 bg-violet-500/10"
+                          ? "bg-page text-primary" 
+                          : "text-secondary hover:text-primary hover:bg-elevated",
+                        draggedTabId === tab.id && "opacity-50 scale-95 z-50 bg-accent/10"
                       )}
                     >
                       {activeTabId === tab.id && (
-                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500" />
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
                       )}
-                      <Icon size={14} className={cn(activeTabId === tab.id ? "text-violet-400" : "text-[#6b6b7a]")} />
+                      <Icon size={14} className={cn(activeTabId === tab.id ? "text-accent" : "text-secondary")} />
                       <span>{tab.label}</span>
                       {tab.closable && (
                         <div 
                           onClick={(e) => handleClose(e, tab.id)}
-                          className="p-0.5 rounded-sm hover:bg-[#232328] opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                          className="p-0.5 rounded-sm hover:bg-inset opacity-0 group-hover:opacity-100 transition-opacity ml-1"
                         >
                           <X size={12} />
                         </div>
@@ -92,26 +101,26 @@ export function TabBar() {
                     </button>
                   </ContextMenu.Trigger>
                   <ContextMenu.Portal>
-                    <ContextMenu.Content className="bg-[#1c1c20] border border-[#232328] rounded-md p-1 shadow-xl z-50 min-w-[160px] animate-in fade-in zoom-in-95 duration-100">
+                    <ContextMenu.Content className="bg-elevated border border-default rounded-md p-1 shadow-xl z-50 min-w-[160px] animate-in fade-in zoom-in-95 duration-100">
                       <ContextMenu.Item 
                         onClick={() => handleSplit(tab.id, 'vertical')}
-                        className="flex items-center gap-2 px-2 py-1.5 text-xs text-[#e8e8ed] hover:bg-violet-500 rounded cursor-pointer outline-none"
+                        className="flex items-center gap-2 px-2 py-1.5 text-xs text-primary hover:bg-accent rounded cursor-pointer outline-none"
                       >
                         <Split size={14} className="rotate-90" />
                         Split Down
                       </ContextMenu.Item>
                       <ContextMenu.Item 
                         onClick={() => handleSplit(tab.id, 'horizontal')}
-                        className="flex items-center gap-2 px-2 py-1.5 text-xs text-[#e8e8ed] hover:bg-violet-500 rounded cursor-pointer outline-none"
+                        className="flex items-center gap-2 px-2 py-1.5 text-xs text-primary hover:bg-accent rounded cursor-pointer outline-none"
                       >
                         <Split size={14} />
                         Split Right
                       </ContextMenu.Item>
-                      <ContextMenu.Separator className="h-[1px] bg-[#232328] my-1" />
+                      <ContextMenu.Separator className="h-[1px] bg-subtle my-1" />
                       <ContextMenu.Item 
                         onClick={() => closeTab(tab.id)}
                         disabled={!tab.closable}
-                        className="flex items-center gap-2 px-2 py-1.5 text-xs text-[#e8e8ed] hover:bg-red-500 rounded cursor-pointer outline-none disabled:opacity-30"
+                        className="flex items-center gap-2 px-2 py-1.5 text-xs text-primary hover:bg-error rounded cursor-pointer outline-none disabled:opacity-30"
                       >
                         <X size={14} />
                         Close Tab
@@ -127,12 +136,12 @@ export function TabBar() {
 
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
-          <button className="h-full px-3 text-[#6b6b7a] hover:text-[#e8e8ed] hover:bg-[#1c1c20] transition-all border-r border-[#232328]">
+          <button className="h-full px-3 text-secondary hover:text-primary hover:bg-elevated transition-all border-r border-default">
             <Plus size={16} />
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content className="bg-[#1c1c20] border border-[#232328] rounded-md p-1 shadow-xl z-50 min-w-[160px] animate-in fade-in zoom-in-95 duration-100">
+          <DropdownMenu.Content className="bg-elevated border border-default rounded-md p-1 shadow-xl z-50 min-w-[160px] animate-in fade-in zoom-in-95 duration-100">
             {[
               { type: 'preview', label: 'Preview', icon: Play },
               { type: 'code', label: 'Code Editor', icon: Code2 },
@@ -142,13 +151,25 @@ export function TabBar() {
               { type: 'integrations', label: 'Integrations', icon: Puzzle },
               { type: 'skills', label: 'Agent Skills', icon: Sparkles },
               { type: 'settings', label: 'Settings', icon: Settings },
+              { type: 'secrets', label: 'Secrets', icon: LockIcon },
+              { type: 'storage', label: 'App Storage', icon: HardDrive },
+              { type: 'auth', label: 'Authentication', icon: UserCheck },
+              { type: 'publishing', label: 'Publishing', icon: Rocket },
+              { type: 'validation', label: 'Validation', icon: CheckCircle },
+              { type: 'git', label: 'Git', icon: GitBranch },
+              { type: 'workflow', label: 'Workflows', icon: Workflow },
+              { type: 'canvas', label: 'Canvas', icon: Frame },
+              { type: 'testing', label: 'App Testing', icon: MonitorPlay },
             ].map((item) => (
               <DropdownMenu.Item 
                 key={item.type}
                 onClick={() => openTab(item.type as TabType)}
-                className="flex items-center gap-2 px-2 py-1.5 text-xs text-[#e8e8ed] hover:bg-violet-500 rounded cursor-pointer outline-none"
+                className="flex items-center gap-2 px-2 py-1.5 text-xs text-primary hover:bg-accent rounded cursor-pointer outline-none"
               >
-                <item.icon size={14} />
+                {(() => {
+                  const Icon = item.icon;
+                  return <Icon size={14} />;
+                })()}
                 {item.label}
               </DropdownMenu.Item>
             ))}

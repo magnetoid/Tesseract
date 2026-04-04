@@ -1,0 +1,26 @@
+{
+  "name": "torsor-worker",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Torsor background job worker",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "pg": "^8.11.3",
+    "redis": "^4.6.13",
+    "dotenv": "^16.4.1",
+    "uuid": "^9.0.1",
+    "@google/generative-ai": "^0.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/pg": "^8.11.6",
+    "typescript": "^5.8.2",
+    "tsx": "^4.21.0"
+  }
+}

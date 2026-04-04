@@ -65,10 +65,30 @@ Solid now:
 - queue skeleton
 - DB bootstrap
 - health/readiness flow
-- coherent env/docs base
+- real password auth backbone (`/api/v1/auth/signup`, `/api/v1/auth/login`, `/api/v1/auth/me`)
+- DB-backed project CRUD and project file list/upsert routes
+- frontend auth + project loading/creation wired to the API
+- env/docs aligned to `app.torsor.dev` without touching the `torsor.dev` landing page
 
-Next:
-- auth
-- real AI execution
-- frontend-to-API integration
-- tests/CI
+Still intentionally partial:
+- OAuth providers are still placeholders in the UI
+- most deep IDE/editor panels remain mock-heavy
+- tests/CI are still light
+
+## Phase 2 dev auth
+
+Seeded dev credentials:
+- email: `demo@torsor.local`
+- password: `demo12345`
+
+Core Phase 2 routes:
+- `POST /api/v1/auth/signup`
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
+- `GET /api/v1/projects`
+- `POST /api/v1/projects`
+- `GET /api/v1/projects/:projectId`
+- `PATCH /api/v1/projects/:projectId`
+- `DELETE /api/v1/projects/:projectId`
+- `GET /api/v1/projects/:projectId/files`
+- `POST /api/v1/projects/:projectId/files`

@@ -19,7 +19,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { useProjectStore, Project } from '../../stores/projectStore';
+import { useProjectStore } from '../../stores/projectStore';
 import { useLayoutStore } from '../../stores/layoutStore';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { UpgradeDialog } from '../shared/UpgradeDialog';
@@ -53,7 +53,7 @@ const EXAMPLE_PROMPTS = [
 
 export function HomeContent() {
   const navigate = useNavigate();
-  const { projects, addProject, getProjectsByWorkspace } = useProjectStore();
+  const { createProject, fetchProjects, getProjectsByWorkspace } = useProjectStore();
   const { homeSidebarCollapsed } = useLayoutStore();
   const { getActiveWorkspace } = useWorkspaceStore();
   const activeWorkspace = getActiveWorkspace();
@@ -68,7 +68,8 @@ export function HomeContent() {
 
   useEffect(() => {
     shufflePrompts();
-  }, []);
+    void fetchProjects();
+  }, [fetchProjects]);
 
   const shufflePrompts = () => {
     const shuffled = [...EXAMPLE_PROMPTS].sort(() => 0.5 - Math.random()).slice(0, 3);
@@ -83,28 +84,23 @@ export function HomeContent() {
     }
   };
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!prompt.trim() || !activeWorkspace) return;
 
-    // Check plan limits
     const limit = activeWorkspace.plan === 'free' ? 3 : activeWorkspace.plan === 'pro' ? 25 : Infinity;
     if (workspaceProjects.length >= limit) {
       setUpgradeDialogOpen(true);
       return;
     }
 
-    const newId = Math.random().toString(36).substring(7);
-    const newProject: Project = {
-      id: newId,
-      workspaceId: activeWorkspace.id,
-      name: prompt.slice(0, 20) + '...',
+    const newId = await createProject({
+      name: prompt.slice(0, 32),
       description: prompt,
-      lastEdited: 'Just now',
-      type: 'website', // Default
-    };
+      type: 'website',
+      vibe: isPlanning ? 'planner' : 'builder',
+    }, activeWorkspace.id);
 
-    addProject(newProject);
     navigate(`/project/${newId}`);
   };
 

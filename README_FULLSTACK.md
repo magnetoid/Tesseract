@@ -82,6 +82,7 @@ npm run dev -w apps/worker
 
 The compose bootstrap creates:
 - demo user: `demo@torsor.local`
+- demo password: `demo12345`
 - demo project: `Torsor Demo Project`
 
 That gives you a quick `project_id` source for task enqueue tests.
@@ -92,7 +93,16 @@ That gives you a quick `project_id` source for task enqueue tests.
 - `GET /ready`
 - `GET /api/v1`
 - `GET /api/v1/config`
+- `POST /api/v1/auth/signup`
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
 - `GET /api/v1/projects`
+- `POST /api/v1/projects`
+- `GET /api/v1/projects/:projectId`
+- `PATCH /api/v1/projects/:projectId`
+- `DELETE /api/v1/projects/:projectId`
+- `GET /api/v1/projects/:projectId/files`
+- `POST /api/v1/projects/:projectId/files`
 - `GET /api/v1/tasks`
 - `POST /api/v1/tasks`
 
@@ -127,7 +137,13 @@ Real now:
 - docs for local setup and deployment direction
 
 Still intentionally skeletal:
-- real auth
+- OAuth/social login providers
 - real provider execution beyond mock completion payloads
-- frontend integration passes against the new API
+- deeper IDE/editor data plumbing across every panel
 - production-grade secrets / ingress / observability
+
+## Deployment/domain direction
+
+- app target domain: `app.torsor.dev`
+- keep the marketing/landing site on `torsor.dev` untouched
+- production env templates in this repo now point the app-facing config at `app.torsor.dev`

@@ -9,14 +9,19 @@ import { OnboardingPage } from './pages/OnboardingPage';
 import { AuthPage } from './pages/AuthPage';
 import { ProjectWorkspace } from './pages/ProjectWorkspace';
 import { NotFoundPage } from './pages/NotFoundPage';
-import { useAuthStore } from './stores/authStore';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
 import { ProtectedRoute, PublicRoute, AdminRoute } from './components/auth/ProtectedRoute';
 import { useThemeStore } from './lib/theme';
 import { useEffect } from 'react';
+import { useAuthStore } from './stores/authStore';
 
 export default function App() {
   const { toggleTheme } = useThemeStore();
+  const initialize = useAuthStore((state) => state.initialize);
+
+  useEffect(() => {
+    void initialize();
+  }, [initialize]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

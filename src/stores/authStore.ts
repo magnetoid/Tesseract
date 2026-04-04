@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import { apiRequest, getStoredToken, setStoredToken } from '../lib/api';
+
 export interface User {
   id: string;
   name: string;
@@ -11,89 +13,136 @@ export interface User {
   createdAt: string;
 }
 
+interface AuthResponse {
+  token: string;
+  user: User;
+}
+
 interface AuthState {
   user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  initialized: boolean;
+  error: string | null;
+  initialize: () => Promise<void>;
   loginWithGitHub: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  loginWithEmail: (email: string) => Promise<void>;
-  signup: (name: string, email: string) => Promise<void>;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   setOnboarded: (onboarded: boolean) => void;
 }
 
+const normalizeUser = (user: any): User => ({
+  id: user.id,
+  name: user.name || user.username,
+  email: user.email,
+  avatarUrl: user.avatarUrl ?? null,
+  role: user.role === 'super_admin' ? 'super_admin' : 'user',
+  onboarded: Boolean(user.onboarded),
+  createdAt: user.createdAt,
+});
+
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
-      isAuthenticated: false,
+      token: getStoredToken(),
+      isAuthenticated: Boolean(getStoredToken()),
       isLoading: false,
+      initialized: false,
+      error: null,
+      initialize: async () => {
+        if (get().initialized) return;
+
+        const token = getStoredToken();
+        if (!token) {
+          set({ initialized: true, token: null, isAuthenticated: false, user: null });
+          return;
+        }
+
+        set({ isLoading: true, error: null });
+        try {
+          const response = await apiRequest<{ user: User }>('/api/v1/auth/me', { auth: true });
+          set({
+            user: normalizeUser(response.user),
+            token,
+            isAuthenticated: true,
+            isLoading: false,
+            initialized: true,
+          });
+        } catch (error) {
+          setStoredToken(null);
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isLoading: false,
+            initialized: true,
+            error: error instanceof Error ? error.message : 'Failed to restore session',
+          });
+        }
+      },
       loginWithGitHub: async () => {
-        set({ isLoading: true });
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        const mockUser: User = {
-          id: 'u_gh_' + Math.random().toString(36).substr(2, 9),
-          email: 'dev_user@github.com',
-          name: 'GitHub Developer',
-          avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=github',
-          role: 'user',
-          onboarded: true,
-          createdAt: new Date().toISOString(),
-        };
-        set({ user: mockUser, isAuthenticated: true, isLoading: false });
+        throw new Error('GitHub auth is not wired yet in Phase 2');
       },
       loginWithGoogle: async () => {
-        set({ isLoading: true });
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        const mockUser: User = {
-          id: 'u_go_' + Math.random().toString(36).substr(2, 9),
-          email: 'user@google.com',
-          name: 'Google User',
-          avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=google',
-          role: 'user',
-          onboarded: true,
-          createdAt: new Date().toISOString(),
-        };
-        set({ user: mockUser, isAuthenticated: true, isLoading: false });
+        throw new Error('Google auth is not wired yet in Phase 2');
       },
-      loginWithEmail: async (email: string) => {
-        set({ isLoading: true });
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        const mockUser: User = {
-          id: 'u_em_' + Math.random().toString(36).substr(2, 9),
-          email,
-          name: email.split('@')[0],
-          avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-          role: email === 'marko.tiosavljevic@gmail.com' ? 'super_admin' : 'user',
-          onboarded: true,
-          createdAt: new Date().toISOString(),
-        };
-        set({ user: mockUser, isAuthenticated: true, isLoading: false });
+      loginWithEmail: async (email: string, password: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await apiRequest<AuthResponse>('/api/v1/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+          });
+          setStoredToken(response.token);
+          set({
+            user: normalizeUser(response.user),
+            token: response.token,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } catch (error) {
+          set({ isLoading: false, error: error instanceof Error ? error.message : 'Login failed' });
+          throw error;
+        }
       },
-      signup: async (name: string, email: string) => {
-        set({ isLoading: true });
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        const mockUser: User = {
-          id: 'u_new_' + Math.random().toString(36).substr(2, 9),
-          email,
-          name,
-          avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-          role: 'user',
-          onboarded: false,
-          createdAt: new Date().toISOString(),
-        };
-        set({ user: mockUser, isAuthenticated: true, isLoading: false });
+      signup: async (name: string, email: string, password: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await apiRequest<AuthResponse>('/api/v1/auth/signup', {
+            method: 'POST',
+            body: JSON.stringify({ name, email, password }),
+          });
+          setStoredToken(response.token);
+          set({
+            user: normalizeUser(response.user),
+            token: response.token,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } catch (error) {
+          set({ isLoading: false, error: error instanceof Error ? error.message : 'Signup failed' });
+          throw error;
+        }
       },
       logout: () => {
-        set({ user: null, isAuthenticated: false });
+        setStoredToken(null);
+        set({ user: null, token: null, isAuthenticated: false, error: null, initialized: true });
       },
       setOnboarded: (onboarded) => set((state) => ({
-        user: state.user ? { ...state.user, onboarded } : null
+        user: state.user ? { ...state.user, onboarded } : null,
       })),
     }),
     {
       name: 'tesseract-auth',
-    }
-  )
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated,
+      }),
+    },
+  ),
 );

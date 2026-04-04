@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { useProjectStore } from '../stores/projectStore';
 import { OnboardingStep1 } from './steps/OnboardingStep1';
 import { OnboardingStep2 } from './steps/OnboardingStep2';
 import { OnboardingStep3 } from './steps/OnboardingStep3';
@@ -25,6 +26,7 @@ export function OnboardingPage() {
   });
 
   const { user, setOnboarded } = useAuthStore();
+  const createProject = useProjectStore((state) => state.createProject);
   const navigate = useNavigate();
 
   // Pre-fill name from user store if available
@@ -37,14 +39,17 @@ export function OnboardingPage() {
   const nextStep = () => setStep(s => Math.min(s + 1, 4));
   const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
-  const handleComplete = (finalData?: typeof data) => {
+  const handleComplete = async (finalData?: typeof data) => {
     const currentData = finalData || data;
     setOnboarded(true);
-    
+
     if (currentData.prompt || currentData.templateId) {
-      // In a real app, we'd call an API to create the project here
-      // For now, we'll just navigate to a mock project ID
-      navigate('/project/p1');
+      const projectId = await createProject({
+        name: currentData.prompt?.slice(0, 32) || currentData.templateId || 'My first project',
+        description: currentData.prompt || 'Created from onboarding',
+        type: 'website',
+      }, 'server-default');
+      navigate(`/project/${projectId}`);
     } else {
       navigate('/');
     }

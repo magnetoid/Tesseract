@@ -1,31 +1,44 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { AppShell } from '../components/shell/AppShell';
 import { useProjectStore } from '../stores/projectStore';
 
 export function ProjectWorkspace() {
   const { id } = useParams<{ id: string }>();
-  const { projects } = useProjectStore();
-  
-  const project = projects.find(p => p.id === id);
+  const { projects, fetchProject, fetchProjectFiles, isLoading, filesByProject } = useProjectStore();
+
+  const project = useMemo(() => projects.find((p) => p.id === id), [projects, id]);
 
   useEffect(() => {
-    if (project) {
-      // Logic to load project data into stores if needed
-      console.log(`Loading project: ${project.name}`);
-    }
-  }, [project]);
+    if (!id) return;
+    void fetchProject(id);
+    void fetchProjectFiles(id);
+  }, [id, fetchProject, fetchProjectFiles]);
+
+  if (isLoading && !project) {
+    return <div className="flex items-center justify-center h-screen bg-page text-secondary">Loading project…</div>;
+  }
 
   if (!project) {
     return (
-      <div className="flex items-center justify-center h-screen bg-bg-page text-text-primary">
+      <div className="flex items-center justify-center h-screen bg-page text-primary">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Project not found</h1>
-          <p className="text-text-secondary mt-2">The project you're looking for doesn't exist or has been deleted.</p>
+          <p className="text-secondary mt-2">The project you're looking for doesn't exist or has been deleted.</p>
         </div>
       </div>
     );
   }
 
-  return <AppShell />;
+  const files = filesByProject[id || ''] || [];
+
+  return (
+    <div className="h-screen flex flex-col bg-page">
+      <div className="px-4 py-2 border-b border-default bg-surface text-xs text-secondary flex items-center justify-between">
+        <span>{project.name}</span>
+        <span>{files.length} file{files.length === 1 ? '' : 's'} loaded from API</span>
+      </div>
+      <AppShell />
+    </div>
+  );
 }

@@ -1,7 +1,9 @@
 import cors from 'cors';
+import crypto from 'node:crypto';
 import dotenv from 'dotenv';
 import express, { type NextFunction, type Request, type Response } from 'express';
 
+import { hashPassword, requireAuth, sanitizeUserById, signAccessToken, verifyPassword, type AuthenticatedRequest } from './auth.js';
 import { checkHealth as checkDatabaseHealth, query } from './db.js';
 import { healthCheck as checkRedisHealth, connect as connectRedis, getRedisClient } from './redis.js';
 
@@ -11,27 +13,88 @@ const app = express();
 const port = Number.parseInt(process.env.PORT ?? process.env.API_PORT ?? '3001', 10);
 const appUrl = process.env.APP_URL ?? 'http://localhost:3000';
 const corsOrigin = process.env.CORS_ORIGIN ?? appUrl;
+const devSeedEmail = process.env.DEV_SEED_EMAIL ?? 'demo@torsor.local';
+const devSeedPassword = process.env.DEV_SEED_PASSWORD ?? 'demo12345';
 
 app.use(cors({ origin: corsOrigin }));
 app.use(express.json());
 
+const mapProject = (row: any) => ({
+  id: row.id,
+  userId: row.user_id,
+  name: row.name,
+  description: row.description,
+  vibe: row.vibe,
+  isPublic: row.is_public,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapProjectFile = (row: any) => ({
+  id: row.id,
+  projectId: row.project_id,
+  filename: row.filename,
+  language: row.language,
+  content: row.content,
+  version: row.version,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+async function ensureDevSeedUser(): Promise<void> {
+  const existing = await query<{ id: string }>('SELECT id FROM users WHERE email = $1 LIMIT 1', [devSeedEmail]);
+  if (existing.rows[0]) return;
+
+  const passwordHash = await hashPassword(devSeedPassword);
+  await query(
+    `INSERT INTO users (email, username, password_hash, bio)
+     VALUES ($1, $2, $3, $4)`,
+    [devSeedEmail, 'demo', passwordHash, 'Local seeded demo user'],
+  );
+}
+
+async function issueAuthResponse(userId: string) {
+  const user = await sanitizeUserById(userId);
+  if (!user) {
+    throw new Error('User not found after authentication');
+  }
+
+  const sessionId = crypto.randomUUID();
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  await query(
+    `INSERT INTO sessions (id, user_id, token_hash, expires_at)
+     VALUES ($1, $2, $3, $4)`,
+    [sessionId, user.id, tokenHash, expiresAt.toISOString()],
+  );
+
+  const token = signAccessToken({ userId: user.id, email: user.email, sessionId: sessionId.length ? sessionId : undefined });
+
+  return {
+    token,
+    user: {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      name: user.username,
+      avatarUrl: user.avatarUrl,
+      role: user.email === 'marko.tiosavljevic@gmail.com' ? 'super_admin' : 'user',
+      onboarded: true,
+      createdAt: user.createdAt,
+    },
+  };
+}
+
 app.get('/health', (_req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    service: 'torsor-api',
-    timestamp: new Date().toISOString(),
-  });
+  res.status(200).json({ status: 'ok', service: 'torsor-api', timestamp: new Date().toISOString() });
 });
 
 app.get('/ready', async (_req, res) => {
   const [database, redis] = await Promise.all([checkDatabaseHealth(), checkRedisHealth()]);
   const ready = database && redis;
-
-  res.status(ready ? 200 : 503).json({
-    status: ready ? 'ready' : 'degraded',
-    timestamp: new Date().toISOString(),
-    dependencies: { database, redis },
-  });
+  res.status(ready ? 200 : 503).json({ status: ready ? 'ready' : 'degraded', timestamp: new Date().toISOString(), dependencies: { database, redis } });
 });
 
 app.get('/api/v1', (_req, res) => {
@@ -42,6 +105,7 @@ app.get('/api/v1', (_req, res) => {
     endpoints: {
       health: '/health',
       ready: '/ready',
+      auth: '/api/v1/auth',
       projects: '/api/v1/projects',
       tasks: '/api/v1/tasks',
       config: '/api/v1/config',
@@ -54,39 +118,276 @@ app.get('/api/v1/config', (_req, res) => {
     appUrl,
     apiUrl: process.env.VITE_API_URL ?? `http://localhost:${port}`,
     features: {
-      auth: process.env.SUPABASE_URL ? 'supabase-compatible-planned' : 'planned',
-      projects: 'skeleton',
+      auth: 'jwt-password',
+      projects: 'db-backed',
+      files: 'db-backed',
       backgroundJobs: 'skeleton',
     },
-    supabase: {
-      configured: Boolean(process.env.SUPABASE_URL),
-      url: process.env.SUPABASE_URL ?? null,
+    domain: {
+      app: 'app.torsor.dev',
+      landing: 'torsor.dev',
+      note: 'App traffic should target app.torsor.dev and leave torsor.dev landing untouched.',
     },
+    devSeedUser: process.env.NODE_ENV === 'development' ? { email: devSeedEmail, password: devSeedPassword } : undefined,
   });
 });
 
-app.get('/api/v1/projects', async (_req, res, next) => {
+app.post('/api/v1/auth/signup', async (req, res, next) => {
+  try {
+    const { name, email, password } = req.body as { name?: string; email?: string; password?: string };
+    if (!name || !email || !password || password.length < 8) {
+      res.status(400).json({ error: 'name, email, and password (min 8 chars) are required' });
+      return;
+    }
+
+    const existing = await query('SELECT id FROM users WHERE email = $1 LIMIT 1', [email.toLowerCase()]);
+    if (existing.rows[0]) {
+      res.status(409).json({ error: 'An account with that email already exists' });
+      return;
+    }
+
+    const passwordHash = await hashPassword(password);
+    const usernameBase = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || email.split('@')[0];
+    const username = `${usernameBase}-${Math.random().toString(36).slice(2, 7)}`;
+
+    const result = await query<{ id: string }>(
+      `INSERT INTO users (email, username, password_hash)
+       VALUES ($1, $2, $3)
+       RETURNING id`,
+      [email.toLowerCase(), username, passwordHash],
+    );
+
+    res.status(201).json(await issueAuthResponse(result.rows[0].id));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/v1/auth/login', async (req, res, next) => {
+  try {
+    const { email, password } = req.body as { email?: string; password?: string };
+    if (!email || !password) {
+      res.status(400).json({ error: 'email and password are required' });
+      return;
+    }
+
+    const result = await query<{ id: string; email: string; password_hash: string }>(
+      `SELECT id, email, password_hash
+       FROM users
+       WHERE email = $1
+       LIMIT 1`,
+      [email.toLowerCase()],
+    );
+
+    const user = result.rows[0];
+    if (!user || !(await verifyPassword(password, user.password_hash))) {
+      res.status(401).json({ error: 'Invalid email or password' });
+      return;
+    }
+
+    res.json(await issueAuthResponse(user.id));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/api/v1/auth/me', requireAuth, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const user = await sanitizeUserById(req.auth!.userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        name: user.username,
+        avatarUrl: user.avatarUrl,
+        role: user.email === 'marko.tiosavljevic@gmail.com' ? 'super_admin' : 'user',
+        onboarded: true,
+        createdAt: user.createdAt,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/api/v1/projects', requireAuth, async (req: AuthenticatedRequest, res, next) => {
   try {
     const result = await query(
-      `SELECT id, name, description, vibe, is_public, created_at, updated_at
+      `SELECT id, user_id, name, description, vibe, is_public, created_at, updated_at
        FROM projects
-       ORDER BY created_at DESC
-       LIMIT 20`,
+       WHERE user_id = $1
+       ORDER BY updated_at DESC`,
+      [req.auth!.userId],
     );
-
-    res.json({ items: result.rows });
+    res.json({ items: result.rows.map(mapProject) });
   } catch (error) {
     next(error);
   }
 });
 
-app.get('/api/v1/tasks', async (_req, res, next) => {
+app.post('/api/v1/projects', requireAuth, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const { name, description, vibe, isPublic } = req.body as { name?: string; description?: string; vibe?: string; isPublic?: boolean };
+    if (!name?.trim()) {
+      res.status(400).json({ error: 'Project name is required' });
+      return;
+    }
+
+    const result = await query(
+      `INSERT INTO projects (user_id, name, description, vibe, is_public)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, user_id, name, description, vibe, is_public, created_at, updated_at`,
+      [req.auth!.userId, name.trim(), description?.trim() || null, vibe || 'builder', Boolean(isPublic)],
+    );
+
+    const project = result.rows[0];
+    await query(
+      `INSERT INTO project_files (project_id, filename, language, content)
+       VALUES ($1, 'README.md', 'markdown', $2)
+       ON CONFLICT (project_id, filename) DO NOTHING`,
+      [project.id, `# ${project.name}\n\nCreated in Torsor Phase 2.`],
+    );
+
+    res.status(201).json(mapProject(project));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/api/v1/projects/:projectId', requireAuth, async (req: AuthenticatedRequest, res, next) => {
   try {
     const result = await query(
-      `SELECT id, project_id, task_type, status, prompt, result, error, created_at, updated_at
-       FROM ai_tasks
-       ORDER BY created_at DESC
+      `SELECT id, user_id, name, description, vibe, is_public, created_at, updated_at
+       FROM projects
+       WHERE id = $1 AND user_id = $2`,
+      [req.params.projectId, req.auth!.userId],
+    );
+
+    const project = result.rows[0];
+    if (!project) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    res.json(mapProject(project));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch('/api/v1/projects/:projectId', requireAuth, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const current = await query(
+      `SELECT id, user_id, name, description, vibe, is_public, created_at, updated_at
+       FROM projects
+       WHERE id = $1 AND user_id = $2`,
+      [req.params.projectId, req.auth!.userId],
+    );
+
+    const project = current.rows[0];
+    if (!project) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    const { name, description, vibe, isPublic } = req.body as { name?: string; description?: string; vibe?: string; isPublic?: boolean };
+    const updated = await query(
+      `UPDATE projects
+       SET name = $3,
+           description = $4,
+           vibe = $5,
+           is_public = $6,
+           updated_at = NOW()
+       WHERE id = $1 AND user_id = $2
+       RETURNING id, user_id, name, description, vibe, is_public, created_at, updated_at`,
+      [req.params.projectId, req.auth!.userId, name ?? project.name, description ?? project.description, vibe ?? project.vibe, isPublic ?? project.is_public],
+    );
+
+    res.json(mapProject(updated.rows[0]));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.delete('/api/v1/projects/:projectId', requireAuth, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    await query('DELETE FROM projects WHERE id = $1 AND user_id = $2', [req.params.projectId, req.auth!.userId]);
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/api/v1/projects/:projectId/files', requireAuth, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const projectAccess = await query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [req.params.projectId, req.auth!.userId]);
+    if (!projectAccess.rows[0]) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    const result = await query(
+      `SELECT id, project_id, filename, language, content, version, created_at, updated_at
+       FROM project_files
+       WHERE project_id = $1
+       ORDER BY updated_at DESC, filename ASC`,
+      [req.params.projectId],
+    );
+
+    res.json({ items: result.rows.map(mapProjectFile) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/v1/projects/:projectId/files', requireAuth, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const { filename, language, content } = req.body as { filename?: string; language?: string; content?: string };
+    if (!filename?.trim()) {
+      res.status(400).json({ error: 'filename is required' });
+      return;
+    }
+
+    const projectAccess = await query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [req.params.projectId, req.auth!.userId]);
+    if (!projectAccess.rows[0]) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    const result = await query(
+      `INSERT INTO project_files (project_id, filename, language, content, version)
+       VALUES ($1, $2, $3, $4, 1)
+       ON CONFLICT (project_id, filename)
+       DO UPDATE SET language = EXCLUDED.language,
+                     content = EXCLUDED.content,
+                     version = project_files.version + 1,
+                     updated_at = NOW()
+       RETURNING id, project_id, filename, language, content, version, created_at, updated_at`,
+      [req.params.projectId, filename.trim(), language || null, content || ''],
+    );
+
+    res.status(201).json(mapProjectFile(result.rows[0]));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/api/v1/tasks', requireAuth, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const result = await query(
+      `SELECT t.id, t.project_id, t.task_type, t.status, t.prompt, t.result, t.error, t.created_at, t.updated_at
+       FROM ai_tasks t
+       INNER JOIN projects p ON p.id = t.project_id
+       WHERE p.user_id = $1
+       ORDER BY t.created_at DESC
        LIMIT 20`,
+      [req.auth!.userId],
     );
 
     res.json({ items: result.rows });
@@ -95,16 +396,17 @@ app.get('/api/v1/tasks', async (_req, res, next) => {
   }
 });
 
-app.post('/api/v1/tasks', async (req, res, next) => {
+app.post('/api/v1/tasks', requireAuth, async (req: AuthenticatedRequest, res, next) => {
   try {
-    const { projectId, prompt, taskType = 'generate' } = req.body as {
-      projectId?: string;
-      prompt?: string;
-      taskType?: string;
-    };
-
+    const { projectId, prompt, taskType = 'generate' } = req.body as { projectId?: string; prompt?: string; taskType?: string };
     if (!projectId || !prompt) {
       res.status(400).json({ error: 'projectId and prompt are required' });
+      return;
+    }
+
+    const projectAccess = await query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [projectId, req.auth!.userId]);
+    if (!projectAccess.rows[0]) {
+      res.status(404).json({ error: 'Project not found' });
       return;
     }
 
@@ -116,7 +418,6 @@ app.post('/api/v1/tasks', async (req, res, next) => {
     );
 
     const task = result.rows[0];
-
     try {
       await getRedisClient().publish('torsor:jobs', JSON.stringify({ taskId: task.id }));
     } catch {
@@ -136,21 +437,20 @@ app.use((req, res) => {
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   const message = err instanceof Error ? err.message : 'Unknown error';
   console.error('[api] error', err);
-  res.status(500).json({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? message : undefined,
-  });
+  res.status(500).json({ error: 'Internal Server Error', message: process.env.NODE_ENV === 'development' ? message : undefined });
 });
 
 async function start() {
   try {
     await connectRedis();
     await query('SELECT 1');
+    await ensureDevSeedUser();
 
     app.listen(port, '0.0.0.0', () => {
       console.log(`✓ Torsor API running on http://0.0.0.0:${port}`);
       console.log(`  Health: http://localhost:${port}/health`);
       console.log(`  Ready: http://localhost:${port}/ready`);
+      console.log(`  Frontend target: ${appUrl}`);
     });
   } catch (error) {
     console.error('[api] failed to start', error);

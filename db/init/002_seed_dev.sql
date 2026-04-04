@@ -2,7 +2,7 @@
 -- Safe to re-run because inserts are guarded.
 
 INSERT INTO users (email, username, password_hash)
-SELECT 'demo@torsor.local', 'demo', '$2a$10$devseedplaceholderhashdevseedplaceholderhashdevse'
+SELECT 'demo@torsor.local', 'demo', '$2a$10$c5xtgYBe6QYi0G4YwQg69ez2Iy1ZPJ2cucohLzgjTFZHGSuiT3.sq'
 WHERE NOT EXISTS (
   SELECT 1 FROM users WHERE email = 'demo@torsor.local'
 );

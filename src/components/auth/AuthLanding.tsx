@@ -5,12 +5,13 @@ import { useAuthStore } from '../../stores/authStore';
 
 export function AuthLanding() {
   const { loginWithGitHub, loginWithGoogle, loginWithEmail, isLoading } = useAuthStore();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('demo@torsor.local');
+  const [password, setPassword] = useState('demo12345');
 
   const handleEmailLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.trim()) {
-      loginWithEmail(email);
+    if (email.trim() && password.trim()) {
+      void loginWithEmail(email, password);
     }
   };
 
@@ -68,15 +69,25 @@ export function AuthLanding() {
               className="w-full bg-surface border border-default focus:border-accent/50 rounded-xl pl-12 pr-4 py-3.5 text-primary outline-none transition-all placeholder:text-tertiary"
             />
           </div>
+          <div className="relative group">
+            <input 
+              type="password" 
+              placeholder="Enter your password..." 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full bg-surface border border-default focus:border-accent/50 rounded-xl px-4 py-3.5 text-primary outline-none transition-all placeholder:text-tertiary"
+            />
+          </div>
           <button 
             type="submit"
-            disabled={isLoading || !email}
+            disabled={isLoading || !email || !password}
             className="w-full bg-accent hover:bg-accent-hover disabled:bg-accent/50 text-white font-bold rounded-xl px-6 py-3.5 transition-all shadow-lg shadow-accent/20"
           >
             {isLoading ? <Loader2 size={20} className="animate-spin mx-auto" /> : 'Continue'}
           </button>
           <p className="text-center text-xs text-tertiary">
-            No account? We'll create one.
+            Dev seed: demo@torsor.local / demo12345
           </p>
         </form>
       </div>

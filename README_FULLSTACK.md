@@ -34,9 +34,36 @@ npm run build:all
 
 ## Run the stack
 
+Shared-server-safe default:
+
 ```bash
 docker compose up --build
 ```
+
+This compose file now uses internal `expose` entries instead of binding host ports, which makes it safer for Coolify/shared hosts where `3000`, `3001`, `5432`, `6379`, or `8080` may already be taken.
+
+For local host-port access, create a `docker-compose.override.yml` like this:
+
+```yaml
+services:
+  frontend:
+    ports:
+      - "3000:3000"
+  api:
+    ports:
+      - "3001:3001"
+  postgres:
+    ports:
+      - "5432:5432"
+  redis:
+    ports:
+      - "6379:6379"
+  adminer:
+    ports:
+      - "8080:8080"
+```
+
+Docker Compose loads that override automatically in local development, while Coolify can keep using the safe base file.
 
 Optional DB UI:
 
@@ -44,12 +71,14 @@ Optional DB UI:
 docker compose --profile tools up --build
 ```
 
-Default URLs:
-- frontend: http://localhost:3000
-- api: http://localhost:3001
-- adminer: http://localhost:8080
-- postgres: localhost:5432
-- redis: localhost:6379
+Default container-internal service ports:
+- frontend: `3000`
+- api: `3001`
+- adminer: `8080`
+- postgres: `5432`
+- redis: `6379`
+
+If you add the local override above, those become reachable on the same localhost ports.
 
 ## Useful compose commands
 
@@ -147,3 +176,4 @@ Still intentionally skeletal:
 - app target domain: `app.torsor.dev`
 - keep the marketing/landing site on `torsor.dev` untouched
 - production env templates in this repo now point the app-facing config at `app.torsor.dev`
+- for Coolify, route only the `frontend` service externally; keep `api`, `worker`, `postgres`, `redis`, and `adminer` internal unless you deliberately add a separate route

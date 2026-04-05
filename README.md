@@ -31,6 +31,8 @@ Then open:
 
 ## Compose notes
 
+The base `docker-compose.yml` is now shared-server/Coolify-safe by default: services use internal `expose` ports instead of binding host ports. That avoids collisions on shared hosts and plays nicely with a single routed app entrypoint.
+
 The compose stack includes:
 - `frontend`
 - `api`
@@ -38,6 +40,8 @@ The compose stack includes:
 - `postgres`
 - `redis`
 - optional `adminer` via `--profile tools`
+
+For local `localhost` port bindings, add a `docker-compose.override.yml`; an example is documented in `README_FULLSTACK.md`.
 
 For the fuller rationale and Supabase/auth-ready direction, read `README_FULLSTACK.md`.
 

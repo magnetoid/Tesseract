@@ -1,0 +1,46 @@
+# Local Development Overrides
+# This file is automatically read by Docker Compose during local development.
+# It restores the hot-reloading volume mounts and dev commands that were removed
+# from the main docker-compose.yml to make it production-ready for Coolify.
+
+services:
+  api:
+    command: npm run dev
+    env_file:
+      - .env.development
+    volumes:
+      - ./apps/api:/app
+      - api_node_modules:/app/node_modules
+
+  worker:
+    build:
+      target: development
+    command: npm run dev
+    env_file:
+      - .env.development
+    volumes:
+      - ./apps/worker:/app
+      - worker_node_modules:/app/node_modules
+
+  frontend:
+    build:
+      target: development
+    command: npm run dev -- --host 0.0.0.0 --port ${FRONTEND_PORT:-3000}
+    env_file:
+      - .env.development
+    volumes:
+      - .:/app
+      - frontend_node_modules:/app/node_modules
+    expose:
+      - "${FRONTEND_PORT:-3000}"
+    # Exposing the frontend on host port 3000 for local access
+    ports:
+      - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
+
+  # Optionally expose other ports locally
+  # postgres:
+  #   ports:
+  #     - "5432:5432"
+  # redis:
+  #   ports:
+  #     - "6379:6379"

@@ -63,6 +63,7 @@ services:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
+      target: production
     restart: unless-stopped
     env_file:
       - .env.development
@@ -93,17 +94,12 @@ services:
     build:
       context: ./apps/worker
       dockerfile: Dockerfile
+      target: production
     restart: unless-stopped
-    env_file:
-      - .env.development
     environment:
       <<: *app-env
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-5}
       WORKER_POLL_INTERVAL_MS: ${WORKER_POLL_INTERVAL_MS:-5000}
-    command: npm run dev
-    volumes:
-      - ./apps/worker:/app
-      - worker_node_modules:/app/node_modules
     depends_on:
       postgres:
         condition: service_healthy
@@ -116,20 +112,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
     restart: unless-stopped
-    env_file:
-      - .env.development
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       APP_ENV: ${APP_ENV:-development}
       VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
       CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING:-true}
-    command: npm run dev -- --host 0.0.0.0 --port ${FRONTEND_PORT:-3000}
     expose:
-      - "${FRONTEND_PORT:-3000}"
-    volumes:
-      - .:/app
-      - frontend_node_modules:/app/node_modules
+      - "80"
     depends_on:
       api:
         condition: service_healthy

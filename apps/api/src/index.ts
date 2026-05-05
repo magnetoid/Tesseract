@@ -12,7 +12,7 @@ dotenv.config();
 const app = express();
 const port = Number.parseInt(process.env.PORT ?? process.env.API_PORT ?? '3001', 10);
 const appUrl = process.env.APP_URL ?? 'http://localhost:3000';
-const corsOrigin = process.env.CORS_ORIGIN ?? appUrl;
+const corsOrigin = process.env.CORS_ORIGIN ?? '';
 const devSeedEmail = process.env.DEV_SEED_EMAIL ?? 'demo@torsor.local';
 const devSeedPassword = process.env.DEV_SEED_PASSWORD ?? 'demo12345';
 
@@ -35,7 +35,16 @@ async function retryForever(label: string, fn: () => Promise<void>) {
   }
 }
 
-app.use(cors({ origin: corsOrigin }));
+app.use(
+  cors({
+    origin: corsOrigin
+      ? corsOrigin
+          .split(',')
+          .map((value) => value.trim())
+          .filter(Boolean)
+      : true,
+  })
+);
 app.use(express.json());
 
 const mapProject = (row: any) => ({

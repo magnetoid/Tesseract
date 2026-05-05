@@ -106,12 +106,12 @@ services:
       dockerfile: Dockerfile
       target: production
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
+        VITE_API_URL: ${VITE_API_URL:-/api}
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       APP_ENV: ${APP_ENV:-production}
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
+      VITE_API_URL: ${VITE_API_URL:-/api}
       CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING:-true}
     expose:
       - "80"

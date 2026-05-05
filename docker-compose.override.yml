@@ -5,6 +5,8 @@
 
 services:
   api:
+    build:
+      target: development
     command: npm run dev
     env_file:
       - .env.development

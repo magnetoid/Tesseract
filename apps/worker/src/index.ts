@@ -4,6 +4,25 @@ import { createClient } from 'redis';
 
 dotenv.config();
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function retryForever(label: string, fn: () => Promise<void>) {
+  let attempt = 0;
+  let delayMs = 500;
+  while (true) {
+    try {
+      await fn();
+      return;
+    } catch (error) {
+      attempt += 1;
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[worker] ${label} failed (attempt ${attempt}): ${message}`);
+      await sleep(delayMs);
+      delayMs = Math.min(15_000, Math.round(delayMs * 1.5));
+    }
+  }
+}
+
 const redis = createClient({
   url: process.env.REDIS_URL ?? 'redis://localhost:6379',
 });
@@ -104,27 +123,27 @@ async function loop() {
 }
 
 async function main() {
-  try {
-    console.log('[worker] starting torsor worker...');
-    console.log(`[worker] concurrency=${concurrency} pollIntervalMs=${pollIntervalMs}`);
+  console.log('[worker] starting torsor worker...');
+  console.log(`[worker] concurrency=${concurrency} pollIntervalMs=${pollIntervalMs}`);
 
+  await retryForever('redis connect', async () => {
     await redis.connect();
+  });
+
+  await retryForever('postgres connect', async () => {
     await db.query('SELECT 1');
+  });
 
-    console.log('[worker] postgres connected');
-    console.log('[worker] redis connected');
+  console.log('[worker] postgres connected');
+  console.log('[worker] redis connected');
 
-    void redis.subscribe('torsor:jobs', async () => {
-      if (!shuttingDown) {
-        await tick();
-      }
-    });
+  void redis.subscribe('torsor:jobs', async () => {
+    if (!shuttingDown) {
+      await tick();
+    }
+  });
 
-    await loop();
-  } catch (error) {
-    console.error('[worker] fatal error', error);
-    process.exit(1);
-  }
+  await loop();
 }
 
 async function shutdown(signal: string) {

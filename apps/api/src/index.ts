@@ -16,6 +16,25 @@ const corsOrigin = process.env.CORS_ORIGIN ?? appUrl;
 const devSeedEmail = process.env.DEV_SEED_EMAIL ?? 'demo@torsor.local';
 const devSeedPassword = process.env.DEV_SEED_PASSWORD ?? 'demo12345';
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function retryForever(label: string, fn: () => Promise<void>) {
+  let attempt = 0;
+  let delayMs = 500;
+  while (true) {
+    try {
+      await fn();
+      return;
+    } catch (error) {
+      attempt += 1;
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[api] ${label} failed (attempt ${attempt}): ${message}`);
+      await sleep(delayMs);
+      delayMs = Math.min(15_000, Math.round(delayMs * 1.5));
+    }
+  }
+}
+
 app.use(cors({ origin: corsOrigin }));
 app.use(express.json());
 
@@ -42,6 +61,7 @@ const mapProjectFile = (row: any) => ({
 });
 
 async function ensureDevSeedUser(): Promise<void> {
+  if (process.env.NODE_ENV !== 'development') return;
   const existing = await query<{ id: string }>('SELECT id FROM users WHERE email = $1 LIMIT 1', [devSeedEmail]);
   if (existing.rows[0]) return;
 
@@ -441,21 +461,24 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 async function start() {
-  try {
-    await connectRedis();
-    await query('SELECT 1');
-    await ensureDevSeedUser();
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`✓ Torsor API running on http://0.0.0.0:${port}`);
+    console.log(`  Health: http://localhost:${port}/health`);
+    console.log(`  Ready: http://localhost:${port}/ready`);
+    console.log(`  Frontend target: ${appUrl}`);
+  });
 
-    app.listen(port, '0.0.0.0', () => {
-      console.log(`✓ Torsor API running on http://0.0.0.0:${port}`);
-      console.log(`  Health: http://localhost:${port}/health`);
-      console.log(`  Ready: http://localhost:${port}/ready`);
-      console.log(`  Frontend target: ${appUrl}`);
-    });
-  } catch (error) {
-    console.error('[api] failed to start', error);
-    process.exit(1);
-  }
+  await retryForever('redis connect', async () => {
+    await connectRedis();
+  });
+
+  await retryForever('postgres connect', async () => {
+    await query('SELECT 1');
+  });
+
+  await retryForever('dev seed', async () => {
+    await ensureDevSeedUser();
+  });
 }
 
 void start();

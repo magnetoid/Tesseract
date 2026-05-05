@@ -39,7 +39,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-torsor_dev}"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 30
+      start_period: 30s
     networks:
       - torsor_network
 
@@ -55,7 +56,8 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 30
+      start_period: 10s
     networks:
       - torsor_network
 

@@ -115,6 +115,8 @@ services:
       CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING:-true}
     expose:
       - "80"
+    ports:
+      - "127.0.0.1:${FRONTEND_HOST_PORT:-18080}:80"
     depends_on:
       - api
     networks:

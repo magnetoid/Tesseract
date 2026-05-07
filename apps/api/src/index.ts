@@ -2,12 +2,26 @@ import cors from 'cors';
 import crypto from 'node:crypto';
 import dotenv from 'dotenv';
 import express, { type NextFunction, type Request, type Response } from 'express';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import { pino } from 'pino';
+import { pinoHttp } from 'pino-http';
 
-import { hashPassword, requireAuth, sanitizeUserById, signAccessToken, verifyPassword, type AuthenticatedRequest } from './auth.js';
-import { checkHealth as checkDatabaseHealth, query } from './db.js';
-import { healthCheck as checkRedisHealth, connect as connectRedis, getRedisClient } from './redis.js';
+import { hashPassword, requireAuth, sanitizeUserById, signAccessToken, verifyPassword, type AuthenticatedRequest, type UserRole } from './auth.js';
+import { close as closeDb, checkHealth as checkDatabaseHealth, pool, query } from './db.js';
+import { runMigrations } from './migrations/run.js';
+import { healthCheck as checkRedisHealth, connect as connectRedis, disconnect as disconnectRedis, getRedisClient } from './redis.js';
 
 dotenv.config();
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+const logger = pino({
+  level: process.env.LOG_LEVEL ?? (isProduction ? 'info' : 'debug'),
+  transport: isProduction
+    ? undefined
+    : { target: 'pino-pretty', options: { colorize: true, translateTime: 'SYS:HH:MM:ss' } },
+});
 
 const app = express();
 const port = Number.parseInt(process.env.PORT ?? process.env.API_PORT ?? '3001', 10);
@@ -15,6 +29,10 @@ const appUrl = process.env.APP_URL ?? 'http://localhost:3000';
 const corsOrigin = process.env.CORS_ORIGIN ?? '';
 const devSeedEmail = process.env.DEV_SEED_EMAIL ?? 'demo@torsor.local';
 const devSeedPassword = process.env.DEV_SEED_PASSWORD ?? 'demo12345';
+const superAdminEmails = (process.env.SUPER_ADMIN_EMAILS ?? '')
+  .split(',')
+  .map((value) => value.trim().toLowerCase())
+  .filter(Boolean);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -28,13 +46,18 @@ async function retryForever(label: string, fn: () => Promise<void>) {
     } catch (error) {
       attempt += 1;
       const message = error instanceof Error ? error.message : String(error);
-      console.error(`[api] ${label} failed (attempt ${attempt}): ${message}`);
+      logger.warn({ attempt, err: message }, `${label} failed, retrying`);
       await sleep(delayMs);
       delayMs = Math.min(15_000, Math.round(delayMs * 1.5));
     }
   }
 }
 
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.use(pinoHttp({ logger, customLogLevel: (_req, res, err) => (err || res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info') }));
 app.use(
   cors({
     origin: corsOrigin
@@ -45,7 +68,24 @@ app.use(
       : true,
   })
 );
-app.use(express.json());
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT ?? '2mb' }));
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: Number.parseInt(process.env.AUTH_RATE_LIMIT ?? '20', 10),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many auth attempts, slow down.' },
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: Number.parseInt(process.env.API_RATE_LIMIT ?? '300', 10),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+});
+
+app.use('/api', apiLimiter);
 
 const mapProject = (row: any) => ({
   id: row.id,
@@ -68,6 +108,22 @@ const mapProjectFile = (row: any) => ({
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
+
+function resolveRole(email: string, dbRole: UserRole | null | undefined): UserRole {
+  if (dbRole === 'super_admin' || dbRole === 'admin') return dbRole;
+  if (superAdminEmails.includes(email.toLowerCase())) return 'super_admin';
+  return dbRole ?? 'user';
+}
+
+async function syncSuperAdmins(): Promise<void> {
+  if (superAdminEmails.length === 0) return;
+  await query(
+    `UPDATE users
+       SET role = 'super_admin', updated_at = NOW()
+     WHERE LOWER(email) = ANY($1::text[]) AND role <> 'super_admin'`,
+    [superAdminEmails],
+  );
+}
 
 async function ensureDevSeedUser(): Promise<void> {
   if (process.env.NODE_ENV !== 'development') return;
@@ -99,7 +155,7 @@ async function issueAuthResponse(userId: string) {
     [sessionId, user.id, tokenHash, expiresAt.toISOString()],
   );
 
-  const token = signAccessToken({ userId: user.id, email: user.email, sessionId: sessionId.length ? sessionId : undefined });
+  const token = signAccessToken({ userId: user.id, email: user.email, sessionId });
 
   return {
     token,
@@ -109,7 +165,7 @@ async function issueAuthResponse(userId: string) {
       username: user.username,
       name: user.username,
       avatarUrl: user.avatarUrl,
-      role: user.email === 'marko.tiosavljevic@gmail.com' ? 'super_admin' : 'user',
+      role: resolveRole(user.email, user.role),
       onboarded: true,
       createdAt: user.createdAt,
     },
@@ -161,7 +217,7 @@ app.get('/api/v1/config', (_req, res) => {
   });
 });
 
-app.post('/api/v1/auth/signup', async (req, res, next) => {
+app.post('/api/v1/auth/signup', authLimiter, async (req, res, next) => {
   try {
     const { name, email, password } = req.body as { name?: string; email?: string; password?: string };
     if (!name || !email || !password || password.length < 8) {
@@ -169,21 +225,23 @@ app.post('/api/v1/auth/signup', async (req, res, next) => {
       return;
     }
 
-    const existing = await query('SELECT id FROM users WHERE email = $1 LIMIT 1', [email.toLowerCase()]);
+    const normalizedEmail = email.toLowerCase();
+    const existing = await query('SELECT id FROM users WHERE email = $1 LIMIT 1', [normalizedEmail]);
     if (existing.rows[0]) {
       res.status(409).json({ error: 'An account with that email already exists' });
       return;
     }
 
     const passwordHash = await hashPassword(password);
-    const usernameBase = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || email.split('@')[0];
-    const username = `${usernameBase}-${Math.random().toString(36).slice(2, 7)}`;
+    const usernameBase = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || normalizedEmail.split('@')[0];
+    const username = `${usernameBase}-${crypto.randomBytes(3).toString('hex')}`;
+    const initialRole: UserRole = superAdminEmails.includes(normalizedEmail) ? 'super_admin' : 'user';
 
     const result = await query<{ id: string }>(
-      `INSERT INTO users (email, username, password_hash)
-       VALUES ($1, $2, $3)
+      `INSERT INTO users (email, username, password_hash, role)
+       VALUES ($1, $2, $3, $4)
        RETURNING id`,
-      [email.toLowerCase(), username, passwordHash],
+      [normalizedEmail, username, passwordHash, initialRole],
     );
 
     res.status(201).json(await issueAuthResponse(result.rows[0].id));
@@ -192,7 +250,7 @@ app.post('/api/v1/auth/signup', async (req, res, next) => {
   }
 });
 
-app.post('/api/v1/auth/login', async (req, res, next) => {
+app.post('/api/v1/auth/login', authLimiter, async (req, res, next) => {
   try {
     const { email, password } = req.body as { email?: string; password?: string };
     if (!email || !password) {
@@ -235,7 +293,7 @@ app.get('/api/v1/auth/me', requireAuth, async (req: AuthenticatedRequest, res, n
         username: user.username,
         name: user.username,
         avatarUrl: user.avatarUrl,
-        role: user.email === 'marko.tiosavljevic@gmail.com' ? 'super_admin' : 'user',
+        role: resolveRole(user.email, user.role),
         onboarded: true,
         createdAt: user.createdAt,
       },
@@ -449,8 +507,8 @@ app.post('/api/v1/tasks', requireAuth, async (req: AuthenticatedRequest, res, ne
     const task = result.rows[0];
     try {
       await getRedisClient().publish('torsor:jobs', JSON.stringify({ taskId: task.id }));
-    } catch {
-      // Polling worker still works even if pub/sub is unavailable.
+    } catch (err) {
+      logger.warn({ err }, 'redis publish failed, polling worker will pick up task');
     }
 
     res.status(201).json(task);
@@ -463,31 +521,47 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not Found', path: req.path });
 });
 
-app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   const message = err instanceof Error ? err.message : 'Unknown error';
-  console.error('[api] error', err);
-  res.status(500).json({ error: 'Internal Server Error', message: process.env.NODE_ENV === 'development' ? message : undefined });
+  (req as any).log?.error({ err }, 'request error');
+  res.status(500).json({ error: 'Internal Server Error', message: isProduction ? undefined : message });
 });
 
 async function start() {
-  app.listen(port, '0.0.0.0', () => {
-    console.log(`✓ Torsor API running on http://0.0.0.0:${port}`);
-    console.log(`  Health: http://localhost:${port}/health`);
-    console.log(`  Ready: http://localhost:${port}/ready`);
-    console.log(`  Frontend target: ${appUrl}`);
+  await retryForever('postgres connect', async () => {
+    await query('SELECT 1');
   });
 
   await retryForever('redis connect', async () => {
     await connectRedis();
   });
 
-  await retryForever('postgres connect', async () => {
-    await query('SELECT 1');
+  await retryForever('migrations', async () => {
+    await runMigrations(pool);
+  });
+
+  await retryForever('super-admin sync', async () => {
+    await syncSuperAdmins();
   });
 
   await retryForever('dev seed', async () => {
     await ensureDevSeedUser();
   });
+
+  const server = app.listen(port, '0.0.0.0', () => {
+    logger.info({ port }, 'torsor-api listening');
+  });
+
+  const shutdown = async (signal: string) => {
+    logger.info({ signal }, 'shutting down');
+    server.close();
+    try { await disconnectRedis(); } catch (err) { logger.warn({ err }, 'redis disconnect failed'); }
+    try { await closeDb(); } catch (err) { logger.warn({ err }, 'db close failed'); }
+    process.exit(0);
+  };
+
+  process.on('SIGTERM', () => { void shutdown('SIGTERM'); });
+  process.on('SIGINT', () => { void shutdown('SIGINT'); });
 }
 
 void start();

@@ -6,8 +6,11 @@ if (!connectionString) {
   console.warn('[api] DATABASE_URL is not set. Database-backed routes will fail until it is configured.');
 }
 
-const pool = new Pool({
+export const pool = new Pool({
   connectionString,
+  max: Number.parseInt(process.env.DATABASE_POOL_MAX ?? '10', 10),
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 10_000,
 });
 
 pool.on('error', (error) => {

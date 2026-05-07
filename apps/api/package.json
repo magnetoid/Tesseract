@@ -7,20 +7,24 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node --enable-source-maps dist/index.js",
     "lint": "tsc --noEmit",
-    "migrate": "node dist/migrations/run.js"
+    "migrate": "node --enable-source-maps dist/migrations/cli.js"
   },
   "dependencies": {
-    "express": "^4.21.2",
-    "cors": "^2.8.5",
-    "pg": "^8.11.3",
-    "redis": "^4.6.13",
-    "dotenv": "^16.4.1",
-    "jsonwebtoken": "^9.0.0",
+    "@google/generative-ai": "^0.3.1",
     "bcryptjs": "^2.4.3",
-    "uuid": "^9.0.1",
-    "@google/generative-ai": "^0.3.1"
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "pg": "^8.11.3",
+    "pino": "^9.5.0",
+    "pino-http": "^10.3.0",
+    "redis": "^4.6.13",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -29,6 +33,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.11.6",
+    "pino-pretty": "^11.3.0",
     "tsx": "^4.21.0",
     "typescript": "^5.8.2"
   }

@@ -13,7 +13,10 @@ export class ApiError extends Error {
   }
 }
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '');
+// Default to empty string so callers' absolute /api/v1/... paths hit the same origin
+// (which nginx proxies to the api service). Override VITE_API_URL only when the API
+// is on a different origin than the frontend.
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 const AUTH_STORAGE_KEY = 'torsor-auth-token';
 
 export function getApiBaseUrl() {

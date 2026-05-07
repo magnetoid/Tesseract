@@ -4,8 +4,17 @@ import type { Request, Response, NextFunction } from 'express';
 
 import { query } from './db.js';
 
-const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-secret-change-me';
+const RAW_JWT_SECRET = process.env.JWT_SECRET ?? '';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+if (IS_PRODUCTION && (!RAW_JWT_SECRET || RAW_JWT_SECRET === 'dev-secret-change-me' || RAW_JWT_SECRET.length < 32)) {
+  throw new Error('JWT_SECRET must be set to a strong value (>=32 chars) in production');
+}
+
+const JWT_SECRET = RAW_JWT_SECRET || 'dev-secret-change-me';
 const JWT_EXPIRES_IN: SignOptions['expiresIn'] = (process.env.JWT_EXPIRES_IN ?? '7d') as SignOptions['expiresIn'];
+
+export type UserRole = 'user' | 'admin' | 'super_admin';
 
 export interface ApiUser {
   id: string;
@@ -13,6 +22,7 @@ export interface ApiUser {
   username: string;
   avatarUrl: string | null;
   bio: string | null;
+  role: UserRole;
   createdAt: string;
   updatedAt: string;
 }
@@ -64,14 +74,17 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
 }
 
 export async function sanitizeUserById(userId: string): Promise<ApiUser | null> {
-  const result = await query<ApiUser & { avatar_url: string | null; created_at: string; updated_at: string; bio: string | null }>(
-    `SELECT id,
-            email,
-            username,
-            avatar_url,
-            bio,
-            created_at,
-            updated_at
+  const result = await query<{
+    id: string;
+    email: string;
+    username: string;
+    avatar_url: string | null;
+    bio: string | null;
+    role: UserRole;
+    created_at: string;
+    updated_at: string;
+  }>(
+    `SELECT id, email, username, avatar_url, bio, role, created_at, updated_at
      FROM users
      WHERE id = $1`,
     [userId],
@@ -88,6 +101,7 @@ export async function sanitizeUserById(userId: string): Promise<ApiUser | null> 
     username: row.username,
     avatarUrl: row.avatar_url,
     bio: row.bio,
+    role: row.role ?? 'user',
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

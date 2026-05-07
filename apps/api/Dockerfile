@@ -1,23 +1,37 @@
-# Build stage
-FROM node:20-alpine AS builder
+# syntax=docker/dockerfile:1.7
+
+FROM node:20-alpine AS base
 WORKDIR /app
-# Force dev deps to be installed even if NODE_ENV=production leaks in from the host build env.
+RUN apk add --no-cache tini
+
+FROM base AS deps
 ENV NODE_ENV=development
-COPY package*.json ./
-RUN npm install --include=dev --no-audit --no-fund
-COPY tsconfig.json ./
+COPY package.json package-lock.json* ./
+RUN npm ci --include=dev --no-audit --no-fund
+
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json package-lock.json* tsconfig.json ./
 COPY src ./src
 RUN npm run build
 
-# Development stage
-FROM builder AS development
+FROM base AS development
+ENV NODE_ENV=development
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json package-lock.json* tsconfig.json ./
+COPY src ./src
+COPY migrations ./migrations
+USER node
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["npm", "run", "dev"]
 
-# Production stage
-FROM node:20-alpine AS production
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --omit=dev --no-audit --no-fund
+FROM base AS production
+ENV NODE_ENV=production
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 COPY --from=builder /app/dist ./dist
+COPY migrations ./migrations
+USER node
 EXPOSE 3001
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["npm", "start"]
